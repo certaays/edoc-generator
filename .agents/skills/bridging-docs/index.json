@@ -20,5 +20,6 @@
     "list_diagnosis_pra_ops": "resources/bridging_docs/list_diagnosis_pra_ops.md",
     "list_operasi": "resources/bridging_docs/list_operasi.md",
     "session": "resources/bridging_docs/session.md",
-    "nomor_surat": "resources/bridging_docs/nomor_surat.md"
+    "nomor_surat": "resources/bridging_docs/nomor_surat.md",
+    "required_validation": "resources/bridging_docs/required_validation.md"
 }

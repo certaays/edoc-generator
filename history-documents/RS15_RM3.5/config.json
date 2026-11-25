@@ -1,0 +1,124 @@
+{
+    "external_link": {
+        "px_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/patient/get/<patient_id>/full",
+            "data_usage": [
+                "copy",
+                "embeded"
+            ]
+        },
+        "vital_sign_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/patient_vital_sign/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "prescription_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/prescription/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "patient_information_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/patient_information/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "diagnosa_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/diagnosa/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "hasil_lab_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/laboratorium/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "diet_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/diet/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "radiologi_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/radiologi/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "fisioterapi_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/fisioterapi/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "dokter_dpjp_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/doctor_dpjp/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "hasil_lab_list_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/laboratorium_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "hasil_radiologi_list_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/radiologi_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "prescription_data_list": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/prescription_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "laboratorium_data_list": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/laboratorium_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "radiologi_list_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/radiologi_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        },
+        "fisioterapi_list_data": {
+            "source_type": "ws",
+            "source": "[simrs]/e_doc_api/visitation/fisioterapi_list/<reg_number>",
+            "data_usage": [
+                "copy"
+            ]
+        }
+    },
+    "digital_signature": {
+        "ttd_perawat": {
+            "value_type": "path",
+            "json_path": "$.hal_2.ttd.perawat",
+            "encrypt": true
+        }
+    }
+}

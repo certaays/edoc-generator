@@ -1,0 +1,447 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Generated schema for Root",
+    "type": "object",
+    "properties": {
+        "pasien": {
+            "type": "object",
+            "properties": {
+                "nama": {
+                    "type": "string"
+                },
+                "no_rm": {
+                    "type": "string"
+                },
+                "tanggal_lahir": {
+                    "type": "string"
+                },
+                "tanggal_lahir_indo": {
+                    "type": "string"
+                },
+                "kelamin": {
+                    "type": "string"
+                },
+                "alamat": {
+                    "type": "string"
+                },
+                "tempat_lahir": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "tanggal_indo": {
+                    "type": "string"
+                },
+                "jam": {
+                    "type": "string"
+                },
+                "ruang": {
+                    "type": "string"
+                },
+                "bangsal": {
+                    "type": "string"
+                },
+                "kelas": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "nama",
+                "no_rm",
+                "tanggal_lahir",
+                "tanggal_lahir_indo",
+                "kelamin",
+                "alamat",
+                "tempat_lahir",
+                "tanggal",
+                "tanggal_indo",
+                "jam",
+                "ruang",
+                "bangsal",
+                "kelas"
+            ]
+        },
+        "ttd_data": {
+            "type": "object",
+            "properties": {
+                "kota": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "tanggal_indo": {
+                    "type": "string"
+                },
+                "jam": {
+                    "type": "string"
+                },
+                "pasien": {
+                    "type": "string"
+                },
+                "pasien_stroke": {
+                    "type": "string"
+                },
+                "dokter": {
+                    "type": "string"
+                },
+                "dokter_stroke": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "kota",
+                "tanggal",
+                "tanggal_indo",
+                "jam",
+                "pasien",
+                "pasien_stroke",
+                "dokter",
+                "dokter_stroke"
+            ]
+        },
+        "image_canvas": {
+            "type": "object",
+            "properties": {
+                "canvas1": {
+                    "type": "object",
+                    "properties": {
+                        "stroke": {
+                            "type": "string"
+                        },
+                        "image_base64": {
+                            "type": "string"
+                        },
+                        "is_changed": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "stroke",
+                        "image_base64",
+                        "is_changed"
+                    ]
+                }
+            },
+            "required": [
+                "canvas1"
+            ]
+        },
+        "sumber_data_checkbox": {
+            "type": "string"
+        },
+        "sumber_data_dengan": {
+            "type": "string"
+        },
+        "hubungan_dengan_pasien": {
+            "type": "string"
+        },
+        "hamil": {
+            "type": "string"
+        },
+        "vital_sign": {
+            "type": "object",
+            "properties": {
+                "kesadaran": {
+                    "type": "string"
+                },
+                "anamnesis": {
+                    "type": "string"
+                },
+                "alergi": {
+                    "type": "string"
+                },
+                "keluhan_utama": {
+                    "type": "string"
+                },
+                "pemeriksaan_fisik": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "kesadaran",
+                "anamnesis",
+                "alergi",
+                "keluhan_utama",
+                "pemeriksaan_fisik"
+            ]
+        },
+        "alloanamnesa": {
+            "type": "string"
+        },
+        "riwayat_penyakit_dahulu": {
+            "type": "string"
+        },
+        "resep_freetext": {
+            "type": "string"
+        },
+        "pemeriksaan_objektif": {
+            "type": "string"
+        },
+        "ekstra_oral": {
+            "type": "string"
+        },
+        "odontogram_stroke": {
+            "type": "string"
+        },
+        "odontogram_json_state": {
+            "type": "string"
+        },
+        "keterangan_odontogram": {
+            "type": "string"
+        },
+        "oklusi": {
+            "type": "string"
+        },
+        "torus_platinus": {
+            "type": "string"
+        },
+        "torus_mandibula": {
+            "type": "string"
+        },
+        "palatum": {
+            "type": "string"
+        },
+        "diastema": {
+            "type": "string"
+        },
+        "diastema_detail": {
+            "type": "string"
+        },
+        "gigi_anomali": {
+            "type": "string"
+        },
+        "gigi_anomali_detail": {
+            "type": "string"
+        },
+        "lain_lain": {
+            "type": "string"
+        },
+        "jumlah_dan_jenis_foto_yang_diambil": {
+            "type": "string"
+        },
+        "deskripsi_lesi": {
+            "type": "string"
+        },
+        "laboratorium_freetext": {
+            "type": "string"
+        },
+        "radiologi_freetext": {
+            "type": "string"
+        },
+        "ekg_freetext": {
+            "type": "string"
+        },
+        "lain_lain_freetext": {
+            "type": "string"
+        },
+        "diagnosa_masuk_group": {
+            "type": "string"
+        },
+        "diagnosa_masuk_freetext": {
+            "type": "string"
+        },
+        "diagnosa_masuk_autocomplete": {
+            "type": "array",
+            "items": {}
+        },
+        "diagnosa_banding_group": {
+            "type": "string"
+        },
+        "diagnosa_banding_freetext": {
+            "type": "string"
+        },
+        "diagnosa_banding_autocomplete": {
+            "type": "array",
+            "items": {}
+        },
+        "diagnosa_sekunder_group": {
+            "type": "string"
+        },
+        "diagnosa_sekunder_freetext": {
+            "type": "string"
+        },
+        "diagnosa_sekunder_autocomplete": {
+            "type": "array",
+            "items": {}
+        },
+        "masalah_medis": {
+            "type": "string"
+        },
+        "masalah_keperawatan": {
+            "type": "string"
+        },
+        "sasaran": {
+            "type": "string"
+        },
+        "rencana_asuhan": {
+            "type": "string"
+        },
+        "tindakan_group": {
+            "type": "string"
+        },
+        "tindakan_freetext": {
+            "type": "string"
+        },
+        "tindakan_list": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "nama_layanan": {
+                        "type": "string"
+                    },
+                    "icd_9_code": {
+                        "type": "string"
+                    },
+                    "icd_9_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "nama_layanan",
+                    "icd_9_code",
+                    "icd_9_name"
+                ]
+            }
+        },
+        "rencana_pemulangan": {
+            "type": "string"
+        },
+        "checkbox_rawat_jalan": {
+            "type": "boolean"
+        },
+        "checkbox_rawat_inap": {
+            "type": "boolean"
+        },
+        "checkbox_dpjp_ranap": {
+            "type": "boolean"
+        },
+        "dpjp_ranap": {
+            "type": "string"
+        },
+        "checkbox_dokter_spesialis": {
+            "type": "boolean"
+        },
+        "dokter_spesialis": {
+            "type": "string"
+        },
+        "checkbox_rs_rujukan": {
+            "type": "boolean"
+        },
+        "rs_rujukan": {
+            "type": "string"
+        },
+        "checkbox_puskesmas": {
+            "type": "boolean"
+        },
+        "puskesmas": {
+            "type": "string"
+        },
+        "checkbox_dokter_keluarga": {
+            "type": "boolean"
+        },
+        "checkbox_homecare": {
+            "type": "boolean"
+        },
+        "kontrol_klinik": {
+            "type": "string"
+        },
+        "indikasi": {
+            "type": "string"
+        },
+        "tanggal_rencana_pemulangan": {
+            "type": "string"
+        },
+        "tanggal_rencana_pemulangan_indo": {
+            "type": "string"
+        },
+        "edukasi": {
+            "type": "string"
+        },
+        "edukasi_awal_disampaikan": {
+            "type": "string"
+        },
+        "nama_keluarga_pasien": {
+            "type": "string"
+        },
+        "hubungan_dengan_pasien_edukasi": {
+            "type": "string"
+        },
+        "alasan_tidak_dapat_memberi_edukasi": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "pasien",
+        "ttd_data",
+        "image_canvas",
+        "sumber_data_checkbox",
+        "sumber_data_dengan",
+        "hubungan_dengan_pasien",
+        "hamil",
+        "vital_sign",
+        "alloanamnesa",
+        "riwayat_penyakit_dahulu",
+        "resep_freetext",
+        "pemeriksaan_objektif",
+        "ekstra_oral",
+        "odontogram_stroke",
+        "odontogram_json_state",
+        "keterangan_odontogram",
+        "oklusi",
+        "torus_platinus",
+        "torus_mandibula",
+        "palatum",
+        "diastema",
+        "diastema_detail",
+        "gigi_anomali",
+        "gigi_anomali_detail",
+        "lain_lain",
+        "jumlah_dan_jenis_foto_yang_diambil",
+        "deskripsi_lesi",
+        "laboratorium_freetext",
+        "radiologi_freetext",
+        "ekg_freetext",
+        "lain_lain_freetext",
+        "diagnosa_masuk_group",
+        "diagnosa_masuk_freetext",
+        "diagnosa_masuk_autocomplete",
+        "diagnosa_banding_group",
+        "diagnosa_banding_freetext",
+        "diagnosa_banding_autocomplete",
+        "diagnosa_sekunder_group",
+        "diagnosa_sekunder_freetext",
+        "diagnosa_sekunder_autocomplete",
+        "masalah_medis",
+        "masalah_keperawatan",
+        "sasaran",
+        "rencana_asuhan",
+        "tindakan_group",
+        "tindakan_freetext",
+        "tindakan_list",
+        "rencana_pemulangan",
+        "checkbox_rawat_jalan",
+        "checkbox_rawat_inap",
+        "checkbox_dpjp_ranap",
+        "dpjp_ranap",
+        "checkbox_dokter_spesialis",
+        "dokter_spesialis",
+        "checkbox_rs_rujukan",
+        "rs_rujukan",
+        "checkbox_puskesmas",
+        "puskesmas",
+        "checkbox_dokter_keluarga",
+        "checkbox_homecare",
+        "kontrol_klinik",
+        "indikasi",
+        "tanggal_rencana_pemulangan",
+        "tanggal_rencana_pemulangan_indo",
+        "edukasi",
+        "edukasi_awal_disampaikan",
+        "nama_keluarga_pasien",
+        "hubungan_dengan_pasien_edukasi",
+        "alasan_tidak_dapat_memberi_edukasi"
+    ]
+}

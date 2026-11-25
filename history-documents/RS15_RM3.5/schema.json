@@ -1,0 +1,1099 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "default": {},
+    "title": "Root Schema",
+    "required": [
+        "pasien",
+        "rencana_tanggal_pulang",
+        "rencana_tanggal_pulang_indo",
+        "rencana_jam",
+        "satu",
+        "dua",
+        "tiga",
+        "empat",
+        "lima",
+        "enam",
+        "tujuh",
+        "delapan",
+        "sembilan",
+        "sepuluh",
+        "sebelas",
+        "duabelas",
+        "tigabelas",
+        "empatbelas",
+        "limabelas",
+        "enambelas"
+    ],
+    "properties": {
+        "pasien": {
+            "type": "object",
+            "default": {},
+            "title": "The pasien Schema",
+            "required": [
+                "nama",
+                "no_rm",
+                "tanggal_lahir",
+                "tanggal_lahir_indo",
+                "alamat",
+                "kelamin"
+            ],
+            "properties": {
+                "nama": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The nama Schema",
+                    "examples": [
+                        ""
+                    ]
+                },
+                "no_rm": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The no_rm Schema",
+                    "examples": [
+                        ""
+                    ]
+                },
+                "tanggal_lahir": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The tanggal_lahir Schema",
+                    "examples": [
+                        ""
+                    ]
+                },
+                "tanggal_lahir_indo": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The tanggal_lahir_indo Schema",
+                    "examples": [
+                        ""
+                    ]
+                },
+                "alamat": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The alamat Schema",
+                    "examples": [
+                        ""
+                    ]
+                },
+                "kelamin": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The kelamin Schema",
+                    "examples": [
+                        ""
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "nama": "",
+                    "no_rm": "",
+                    "tanggal_lahir": "",
+                    "tanggal_lahir_indo": "",
+                    "alamat": "",
+                    "kelamin": ""
+                }
+            ]
+        },
+        "rencana_tanggal_pulang": {
+            "type": "string",
+            "default": "",
+            "title": "The rencana_tanggal_pulang Schema",
+            "examples": [
+                ""
+            ]
+        },
+        "rencana_tanggal_pulang_indo": {
+            "type": "string",
+            "default": "",
+            "title": "The rencana_tanggal_pulang_indo Schema",
+            "examples": [
+                ""
+            ]
+        },
+        "rencana_jam": {
+            "type": "string",
+            "default": "",
+            "title": "The rencana_jam Schema",
+            "examples": [
+                ""
+            ]
+        },
+        "satu": {
+            "type": "object",
+            "default": {},
+            "title": "The satu Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "dua": {
+            "type": "object",
+            "default": {},
+            "title": "The dua Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "tiga": {
+            "type": "object",
+            "default": {},
+            "title": "The tiga Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "empat": {
+            "type": "object",
+            "default": {},
+            "title": "The empat Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "lima": {
+            "type": "object",
+            "default": {},
+            "title": "The lima Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "enam": {
+            "type": "object",
+            "default": {},
+            "title": "The enam Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "tujuh": {
+            "type": "object",
+            "default": {},
+            "title": "The tujuh Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "delapan": {
+            "type": "object",
+            "default": {},
+            "title": "The delapan Schema",
+            "required": [
+                "ya",
+                "tidak",
+                "kemampuan",
+                "bertransportasi",
+                "menyiapkan",
+                "belanja",
+                "mengerjakan",
+                "mengatur_pengguanaan",
+                "mengatur_keuangan"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "kemampuan": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The kemampuan Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "bertransportasi": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The bertransportasi Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "menyiapkan": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The menyiapkan Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "belanja": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The belanja Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "mengerjakan": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The mengerjakan Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "mengatur_pengguanaan": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The mengatur_pengguanaan Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                },
+                "mengatur_keuangan": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The mengatur_keuangan Schema",
+                    "required": [
+                        "mampu",
+                        "tidak"
+                    ],
+                    "properties": {
+                        "mampu": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The mampu Schema",
+                            "examples": [
+                                false
+                            ]
+                        },
+                        "tidak": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "The tidak Schema",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [
+                        {
+                            "mampu": false,
+                            "tidak": false
+                        }
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false,
+                    "kemampuan": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "bertransportasi": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "menyiapkan": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "belanja": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "mengerjakan": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "mengatur_pengguanaan": {
+                        "mampu": false,
+                        "tidak": false
+                    },
+                    "mengatur_keuangan": {
+                        "mampu": false,
+                        "tidak": false
+                    }
+                }
+            ]
+        },
+        "sembilan": {
+            "type": "object",
+            "default": {},
+            "title": "The sembilan Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "sepuluh": {
+            "type": "object",
+            "default": {},
+            "title": "The sepuluh Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "sebelas": {
+            "type": "object",
+            "default": {},
+            "title": "The sebelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "duabelas": {
+            "type": "object",
+            "default": {},
+            "title": "The duabelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "tigabelas": {
+            "type": "object",
+            "default": {},
+            "title": "The tigabelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "empatbelas": {
+            "type": "object",
+            "default": {},
+            "title": "The empatbelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "limabelas": {
+            "type": "object",
+            "default": {},
+            "title": "The limabelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "enambelas": {
+            "type": "object",
+            "default": {},
+            "title": "The enambelas Schema",
+            "required": [
+                "ya",
+                "tidak"
+            ],
+            "properties": {
+                "ya": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The ya Schema",
+                    "examples": [
+                        false
+                    ]
+                },
+                "tidak": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "The tidak Schema",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [
+                {
+                    "ya": false,
+                    "tidak": false
+                }
+            ]
+        },
+        "checkAllYa": {
+            "type": "boolean",
+            "default": false,
+            "title": "The checkAllYa Schema"
+        },
+        "checkAllTidak": {
+            "type": "boolean",
+            "default": false,
+            "title": "The checkAllTidak Schema"
+        },
+        "hal_2": {
+            "type": "object",
+            "title": "The hal_2 Schema",
+            "default": {},
+            "properties": {
+                "transportasi": {
+                    "type": "string"
+                },
+                "orang_yang_mendampingi": {
+                    "type": "string"
+                },
+                "resep_freetext": {
+                    "type": "string"
+                },
+                "pengobatan": {
+                    "type": "array"
+                },
+                "diet": {
+                    "type": "string"
+                },
+                "perawatan_medis_dirumah": {
+                    "type": "object"
+                },
+                "alat_bantu": {
+                    "type": "object"
+                },
+                "pendidikan_kesehatan": {
+                    "type": "object"
+                },
+                "diberikan_kepada": {
+                    "type": "object"
+                },
+                "jadwal_kontrol": {
+                    "type": "object"
+                },
+                "instruksi": {
+                    "type": "object"
+                },
+                "ttd": {
+                    "type": "object",
+                    "properties": {
+                        "pihak_pasien": {
+                            "type": "string"
+                        },
+                        "hubungan": {
+                            "type": "string"
+                        },
+                        "perawat": {
+                            "type": "string"
+                        },
+                        "pihak_pasien_stroke": {
+                            "type": "string"
+                        },
+                        "perawat_stroke": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "examples": [
+        {
+            "pasien": {
+                "nama": "",
+                "no_rm": "",
+                "tanggal_lahir": "",
+                "tanggal_lahir_indo": "",
+                "alamat": "",
+                "kelamin": ""
+            },
+            "rencana_tanggal_pulang": "",
+            "rencana_tanggal_pulang_indo": "",
+            "rencana_jam": "",
+            "satu": {
+                "ya": false,
+                "tidak": false
+            },
+            "dua": {
+                "ya": false,
+                "tidak": false
+            },
+            "tiga": {
+                "ya": false,
+                "tidak": false
+            },
+            "empat": {
+                "ya": false,
+                "tidak": false
+            },
+            "lima": {
+                "ya": false,
+                "tidak": false
+            },
+            "enam": {
+                "ya": false,
+                "tidak": false
+            },
+            "tujuh": {
+                "ya": false,
+                "tidak": false
+            },
+            "delapan": {
+                "ya": false,
+                "tidak": false,
+                "kemampuan": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "bertransportasi": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "menyiapkan": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "belanja": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "mengerjakan": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "mengatur_pengguanaan": {
+                    "mampu": false,
+                    "tidak": false
+                },
+                "mengatur_keuangan": {
+                    "mampu": false,
+                    "tidak": false
+                }
+            },
+            "sembilan": {
+                "ya": false,
+                "tidak": false
+            },
+            "sepuluh": {
+                "ya": false,
+                "tidak": false
+            },
+            "sebelas": {
+                "ya": false,
+                "tidak": false
+            },
+            "duabelas": {
+                "ya": false,
+                "tidak": false
+            },
+            "tigabelas": {
+                "ya": false,
+                "tidak": false
+            },
+            "empatbelas": {
+                "ya": false,
+                "tidak": false
+            },
+            "limabelas": {
+                "ya": false,
+                "tidak": false
+            },
+            "enambelas": {
+                "ya": false,
+                "tidak": false
+            }
+        }
+    ]
+}

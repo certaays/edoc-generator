@@ -1,0 +1,3004 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.js"
+    integrity="sha512-is1ls2rgwpFZyixqKFEExPHVUUL+pPkBEPw47s/6NDQ4n1m6T/ySeDW3p54jp45z2EJ0RSOgilqee1WhtelXfA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript" charset="utf-8">
+    // Global variable here
+    const URL_IMAGE_SEVER_LOCAL = "http://192.168.0.201:1201/";  // Sesuaikan
+    const URL_IMAGE_SEVER_WG = "http://11.11.17.2:1201/"; // Sesuaikan
+    const IP_WG = "11.11.17.4"; // Sesuaikan
+
+    // Vue components here
+    Vue.component("ttd-section", {
+        props: {
+            mode: String,
+            drawer_name: String,
+            label: String,
+            value: String,
+            path_name: String,
+            stroke: String,
+            path_stroke: String,
+            name_input_type: String,
+            select_id: String,
+        },
+        mounted() {
+            $(`#${this.select_id}`).on("select2:select", (e) => {
+                const selected = e.params.data;
+
+                if (selected) {
+                    const url = selected.ttd_image ? this.getImageUrl() + selected.ttd_image : "";
+                    this.onChangeTTD(url);
+                }
+            });
+
+            $(`#${this.select_id}`).on("select2:clearing", (e) => {
+                this.localValue = "";
+                this.updateStrokeBaru("");
+            });
+
+            setSelect2(`#${this.select_id}`, this.value, this.value);
+        },
+        methods: {
+            getImageUrl() {
+                return window.location.hostname === IP_WG ? URL_IMAGE_SEVER_WG : URL_IMAGE_SEVER_LOCAL;
+            },
+            showImageUrl(url) {
+                if (!url || typeof url !== 'string' || url.trim() === '') {
+                    console.warn('URL tidak valid atau kosong. Mengembalikan string kosong.');
+                    return '';
+                }
+
+                try {
+                    // 2. Gunakan objek URL untuk mendapatkan pathname
+                    const urlObject = new URL(url);
+                    const result = this.getImageUrl() + urlObject.pathname;
+                    return result;
+                } catch (e) {
+                    console.error("Gagal memproses URL:", e);
+                    // Mengembalikan URL asli jika terjadi kesalahan
+                    return url;
+                }
+            },
+            handleOpenTTDModal({ path_stroke, path_name, mode, label, name_input_type }) {
+                this.$emit("open-ttd-modal", {
+                    path_stroke,
+                    path_name,
+                    label,
+                    name_input_type,
+                    mode_ttd: mode,
+                });
+            },
+            onChangeTTD(url = "") {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => {
+                    if (this.localValue) {
+                        let stroke = "";
+
+                        if (this.mode === "QRCODE") {
+                            stroke = generatorQr(this.localValue);
+                        } else if (this.mode === "IMAGE") {
+                            stroke = url;
+                        } else {
+                            return;
+                        }
+
+                        this.updateStrokeBaru(stroke);
+                    } else {
+                        this.updateStrokeBaru("");
+                    }
+                }, 500); // delay 500 ms
+            },
+            updateStrokeBaru(url) {
+                // Memberi tahu parent untuk update stroke
+                this.$emit("update-stroke", url);
+            },
+        },
+        computed: {
+            localValue: {
+                get() {
+                    return this.value;
+                },
+                set(val) {
+                    this.$emit("input", val);
+                },
+            },
+        },
+        template: `
+<div class="row justify-content-center align-items-center">
+    <div class="col-md-12">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-12 text-center" style="height:40px">
+                <p class="mb-0">{{ label }}</p>
+            </div>
+
+            <div class="col-md-12 text-center mb-2">
+                <img v-if="mode === 'IMAGE'" :src="showImageUrl(stroke)" alt="TTD Image" class="ttd-img" onerror="this.src='/images/blank.png';" />
+                <img v-else :src="stroke" alt="TTD Image" class="ttd-img" onerror="this.src='/images/blank.png';" />
+            </div>
+
+            <div v-if="mode === 'CANVAS'" class="col-md-12 text-center">
+                <p class="mb-0">{{ localValue }}</p>
+            </div>
+
+            <div v-if="mode === 'IMAGE' || mode === 'QRCODE'" class="col-md-12 text-center" style="height:23px">
+            </div>
+
+            <div class="col-md-12 text-center" v-if="mode === 'CANVAS'">
+                <button style="min-width: 230px;" type="button"
+                class="btn"
+                :class="{
+                    'bg-success text-white': (stroke === '' && localValue === ''),
+                    'bg-warning text-black': (stroke !== '' || localValue !== '')
+                }"
+                data-toggle="modal"
+                data-target="#tandaTanganModal"
+                @click="handleOpenTTDModal( { path_stroke, path_name, mode, label, name_input_type } )">
+                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                &nbsp;&nbsp;
+                {{ stroke === '' && localValue === '' ? 'Tambah' : 'Edit' }} Tanda Tangan
+                </button>
+            </div>
+
+            <div class="col-md-12 text-center" v-if="mode !== 'CANVAS'">
+                <input v-if="name_input_type === 'TEXT'" type="text" class="form-control" v-model="localValue" @input="onChangeTTD" />
+                <!-- Jika mode bukan CANVAS, tampilkan input select (auto complete) -->
+                <select v-if="name_input_type !== 'TEXT'" class="form-control" :id="select_id" style="width: 100%;"></select>
+            </div>
+        </div>
+    </div>
+</div>
+`,
+    });
+
+    // Config function here
+    function configDiagnosaGizi(data) {
+        return {
+            element: "#diagnosa_gizi",
+            url: "/api/emr/autocomplete?source_name=diet",
+            markup_template: function (repo) {
+                return `<b>${repo.icd_x}</b> | ${repo.deskripsi}`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.icd_x != undefined) {
+                    DIAGNOSA_GIZI_TMP = [{ kode_nama: repo.kode_nama, deskripsi_diet_diagnosa_gizi: repo.deskripsi_diet_diagnosa_gizi }];
+                    res = repo.kode_nama + " - " + repo.deskripsi_diet_diagnosa_gizi;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function configDiagnosa(data) {
+        return {
+            element: "#icdx_auto1",
+            url: "/api/emr/autocomplete?source_name=diagnosa",
+            markup_template: function (repo) {
+                return `<b>${repo.icd_x}</b> | ${repo.deskripsi}`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.icd_x != undefined) {
+                    DIAGNOSA_TMP = [{ icd_x: repo.icd_x, nama_sebab_sakit: repo.deskripsi }];
+                    res = repo.icd_x + " - " + repo.deskripsi;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function configDokter1(data) {
+        return {
+            element: "#dokter_auto1",
+            url: "/api/emr/autocomplete?source_name=dokter",
+            allowClear: true,
+            query_params: {
+                status: "",
+                spesialisasi: "",
+            },
+            markup_template: function (repo) {
+                return `<b>${repo.nama}</b>`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.id != "") {
+                    res = repo.nama || data.ttd_data.dokter;
+                    data.ttd_data.dokter = res;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function configNakes1(data) {
+        return {
+            element: "#nakes_auto1",
+            url: "/api/emr/autocomplete?source_name=nakes",
+            allowClear: true,
+            query_params: {
+                status: "",
+                id_profesi_nakes: "",
+            },
+
+            markup_template: function (repo) {
+                return `<b>${repo.nama}</b>`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.id != "") {
+                    res = repo.nama || data.ttd_data.perawat;
+                    data.ttd_data.perawat = res;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function configRuang(data) {
+        return {
+            element: "#ruang_auto",
+            url: "/api/emr/autocomplete?source_name=ruang",
+            markup_template: function (repo) {
+                return `<b>${repo.nama_bangsal}</b> - Ruang ${repo.nama_ruang}  <small>(${repo.nama_kelas})</small>`;
+            },
+            allowClear: true,
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+
+                // Previous Code : Bug when edit doc
+                // data.pasien.ruang = repo.nama
+                var data_test = {
+                    nama_bangsal: repo.nama_bangsal || data.pasien.bangsal,
+                    nama_ruang: repo.nama_ruang || data.pasien.ruang,
+                    nama_kelas: repo.nama_kelas || data.pasien.kelas,
+                }; // res = repo.nama ;
+
+                data.pasien.bangsal = data_test.nama_bangsal;
+                data.pasien.ruang = data_test.nama_ruang;
+                data.pasien.kelas = data_test.nama_kelas;
+
+                if (repo.text === "Pilih" && repo.id === "" && data_test.nama_bangsal === "" && data_test.nama_ruang === "" && data_test.nama_kelas === "") {
+                    data.pasien.bangsal = "";
+                    data.pasien.ruang = "";
+                    data.pasien.kelas = "";
+
+                    return "Pilih Ruangan"
+                } else {
+                    return `${data_test.nama_bangsal} - Ruang ${data_test.nama_ruang} - ${data_test.nama_kelas}`;
+                }
+            },
+        };
+    }
+
+    function configTTDModalDokter(data) {
+        return {
+            element: "#dokter_ttd_modal_auto",
+            url: "/api/emr/autocomplete?source_name=dokter",
+            // biar bisa ngetik dan search di modal
+            dropdownParent: "#tandaTanganModal",
+            allowClear: true,
+            query_params: {
+                status: "",
+                spesialisasi: "",
+            },
+            markup_template: function (repo) {
+                return `<b>${repo.nama}</b>`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.id != "") {
+                    res = repo.nama || data.tmp_modal_ttd.name;
+                    data.tmp_modal_ttd.name = res;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function configTTDModalNakes(data) {
+        return {
+            element: "#nakes_ttd_modal_auto",
+            url: "/api/emr/autocomplete?source_name=nakes",
+            // biar bisa ngetik dan search di modal
+            dropdownParent: "#tandaTanganModal",
+            allowClear: true,
+            query_params: {
+                status: "",
+                id_profesi_nakes: "",
+            },
+
+            markup_template: function (repo) {
+                return `<b>${repo.nama}</b>`;
+            },
+            selection_template: function (repo) {
+                // tulis format string untuk label autocomplete
+                var res = "";
+                if (repo.id != "") {
+                    res = repo.nama || data.tmp_modal_ttd.name;
+                    data.tmp_modal_ttd.name = res;
+                }
+
+                return res;
+            },
+        };
+    }
+
+    function init_doc(doc_id, data, operation) {
+
+        setupIndexExpand(data, 'index_expand_diagnosa_gizi', 'diet_data', 'diagnosa_gizi');
+        setupIndexExpand(data, 'index_expand_diagnosa', 'diagnosa_list');
+        data.backup_diagnosa = [];
+        data.backup_diagnosa_check_all = false;
+        data.is_saving_diag = false;
+
+        // Temporary state or variable here
+        data.drawings = {
+            ttd_1: { brushSize: 2, brushColor: "#000000", isDrawing: false, isErasing: false, lastX: 0, lastY: 0 },
+        };
+
+        data.tmp_modal_ttd = {
+            name: "",
+            title: "",
+            label: "",
+            mode: "",
+            mode_ttd: "",
+            path_name: "",
+            path_stroke: "",
+            name_input_type: "",
+        };
+        // INISIALISASI DATA GIZI BARU 
+        if (typeof data.data_gizi === "undefined") {
+            data.data_gizi = {
+                tanggal: '',
+                dpjp: '',
+                antropometri: { bb: '', tb: '', lila: '', tl_rl: '', bbi: '' },
+                status_gizi: { bb_u: '', tb_u: '', bb_tb: '', lla_u: '', imt: '', lila: '', umur_thn: '', umur_bln: '', umur_hr: '' },
+                biokimia: { hb: '', kreatinin: '', ureum: '', asam_urat: '', kgds: '', cholesterol: '', trigliserida: '', hdl: '', ldl: '', hbsag: '', sgpt: '', sgot: '', albumin: '', lain_lain: '' },
+                fisik_klinis: { td: '', n: '', t: '', rr: '', gangguan: [], cara_pemberian: [], lain_lain_gangguan: '', lain_lain_pemberian: '' },
+                dietary: {
+                    alergi: { telur: '', ikan: '', udang: '', ayam: '', gluten: '', kacang: '', susu: '', hazelnut: '' },
+                    pola_makan: '',
+                    asupan: [
+                        { zat_gizi: 'Energi', kebutuhan: '', kecukupan: '', persen: '' },
+                        { zat_gizi: 'Protein', kebutuhan: '', kecukupan: '', persen: '' }
+                    ]
+                },
+                riwayat_personal: { penyakit_dahulu: '' },
+                intervensi_gizi: '',
+                monitoring_evaluasi: [
+                    { tgl: '', antropometri: '', biokimia: '', fisik: '', dietary: '', evaluasi: '' }
+                ]
+            };
+        } else {
+            if (data.data_gizi.fisik_klinis && typeof data.data_gizi.fisik_klinis.cara_pemberian === 'string') {
+                data.data_gizi.fisik_klinis.cara_pemberian = data.data_gizi.fisik_klinis.cara_pemberian ? [data.data_gizi.fisik_klinis.cara_pemberian] : [];
+            }
+            if (data.data_gizi.dietary && data.data_gizi.dietary.asupan && !Array.isArray(data.data_gizi.dietary.asupan)) {
+                const oldAsupan = data.data_gizi.dietary.asupan;
+                const migratedAsupan = [];
+                if (oldAsupan.energi) {
+                    migratedAsupan.push({ zat_gizi: 'Energi', kebutuhan: oldAsupan.energi.kebutuhan || '', kecukupan: oldAsupan.energi.kecukupan || '', persen: oldAsupan.energi.persen || '' });
+                }
+                if (oldAsupan.protein) {
+                    migratedAsupan.push({ zat_gizi: 'Protein', kebutuhan: oldAsupan.protein.kebutuhan || '', kecukupan: oldAsupan.protein.kecukupan || '', persen: oldAsupan.protein.persen || '' });
+                }
+                data.data_gizi.dietary.asupan = migratedAsupan.length ? migratedAsupan : [
+                    { zat_gizi: 'Energi', kebutuhan: '', kecukupan: '', persen: '' },
+                    { zat_gizi: 'Protein', kebutuhan: '', kecukupan: '', persen: '' }
+                ];
+            }
+        }
+
+        // Sinkronisasi status 'Ada' jika data gangguan atau lain-lain sudah terisi sebelumnya
+        if (data.data_gizi?.fisik_klinis?.gangguan && Array.isArray(data.data_gizi.fisik_klinis.gangguan)) {
+            const hasActualGangguan = data.data_gizi.fisik_klinis.gangguan.some(g => g !== 'Tidak ada' && g !== 'Ada') || Boolean(data.data_gizi.fisik_klinis.lain_lain_gangguan);
+            if (hasActualGangguan && !data.data_gizi.fisik_klinis.gangguan.includes('Ada')) {
+                data.data_gizi.fisik_klinis.gangguan.push('Ada');
+            }
+        }
+        // Mengurutkan list vital sign berdasarkan waktu kunjungan terbaru paling atas
+        if (data.external_link?.vital_sign_data_list && Array.isArray(data.external_link.vital_sign_data_list)) {
+            data.external_link.vital_sign_data_list.sort((a, b) => {
+                const getLatestVisit = (item) => {
+                    if (!Array.isArray(item.layanan) || item.layanan?.length === 0) {
+                        return 0; // fallback: paling lama
+                    }
+
+                    const times = item.layanan
+                        .map(x => new Date(x.waktu_visitasi).getTime())
+                        .filter(t => !isNaN(t));
+
+                    return times?.length ? Math.max(...times) : 0;
+                };
+
+                const latestA = getLatestVisit(a);
+                const latestB = getLatestVisit(b);
+
+                return latestB - latestA; // terbaru di atas
+            });
+        }
+
+        var app = new Vue({
+            el: "#formadd",
+            data: data,
+            mounted: function () {
+                this.init();
+
+                $('#hasilDiagUtamaModal').on('hidden.bs.modal', () => {
+                    if (!this.is_saving_diag && this.backup_diagnosa.length > 0) {
+                        this.index_expand_diagnosa = JSON.parse(JSON.stringify(this.backup_diagnosa));
+                        this.index_expand_diagnosa_check_all = this.backup_diagnosa_check_all;
+                    }
+                    this.is_saving_diag = false;
+                });
+
+                this.$nextTick(() => {
+                    document.querySelectorAll("textarea").forEach(autoGrow);
+                });
+            },
+            watch: {
+                'data_gizi.antropometri.bb': 'hitungStatusGizi',
+                'data_gizi.antropometri.tb': 'hitungStatusGizi',
+                'data_gizi.status_gizi.umur_thn': 'hitungStatusGizi',
+                'data_gizi.status_gizi.umur_bln': 'hitungStatusGizi',
+                'data_gizi.status_gizi.umur_hr': 'hitungStatusGizi'
+            },
+            methods: {
+                onGangguanTidakAda: function () {
+                    if (this.data_gizi.fisik_klinis.gangguan.includes("Tidak ada")) {
+                        // Reset pilihan lain hanya menyisakan "Tidak ada"
+                        this.data_gizi.fisik_klinis.gangguan = ["Tidak ada"];
+                        // Kosongkan input teks lain-lain
+                        this.data_gizi.fisik_klinis.lain_lain_gangguan = "";
+                    }
+                },
+                onGangguanAda: function () {
+                    if (this.data_gizi.fisik_klinis.gangguan.includes("Ada")) {
+                        // Hapus "Tidak ada" jika sebelumnya dicentang
+                        this.data_gizi.fisik_klinis.gangguan = this.data_gizi.fisik_klinis.gangguan.filter(item => item !== "Tidak ada");
+                    } else {
+                        // Jika "Ada" di-uncheck, reset semua pilihan gangguan di dalamnya
+                        this.data_gizi.fisik_klinis.gangguan = [];
+                        this.data_gizi.fisik_klinis.lain_lain_gangguan = "";
+                    }
+                },
+                // TAMBAHKAN FUNGSI MONITORING EVALUASI DI SINI
+                addMonitoring: function () {
+                    this.data_gizi.monitoring_evaluasi.push({ tgl: '', antropometri: '', biokimia: '', fisik: '', dietary: '', evaluasi: '' });
+                },
+                removeMonitoring: function (index) {
+                    Swal.fire({
+                        title: "Apa anda yakin?",
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "red",
+                        cancelButtonColor: "grey",
+                        confirmButtonText: "Ya, hapus!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (index > -1) {
+                                this.data_gizi.monitoring_evaluasi.splice(index, 1);
+                            }
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil menghapus data",
+                                showConfirmButton: false,
+                                timer: 1000
+                            });
+                        }
+                    });
+                },
+                addAsupan: function () {
+                    this.data_gizi.dietary.asupan.push({ zat_gizi: '', kebutuhan: '', kecukupan: '', persen: '' });
+                },
+                removeAsupan: function (index) {
+                    Swal.fire({
+                        title: "Apa anda yakin?",
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "red",
+                        cancelButtonColor: "grey",
+                        confirmButtonText: "Ya, hapus!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (index > -1) {
+                                this.data_gizi.dietary.asupan.splice(index, 1);
+                            }
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil menghapus data",
+                                showConfirmButton: false,
+                                timer: 1000
+                            });
+                        }
+                    });
+                },
+
+                setVitalSign: function (vital_data, layanan, collapse_id) {
+                    // menggunakan id collapse untuk expand data yang sudah terpilih di modal
+                    if (collapse_id) {
+                        $('#' + collapse_id).collapse('show');
+                    }
+
+                    // menampilkan gcs sesuai jenis layanan
+                    const gcsFix = vital_data.jenis_layanan === "IGD" ? vital_data?.assesmen_igd : layanan?.gcs;
+
+                    // Sesuaikan data dibawah ini
+                    this.vital_sign.tinggi_badan = parseFloat(vital_data?.tinggi_badan) || 0.0;
+                    this.vital_sign.berat_badan = parseFloat(vital_data?.berat_badan) || 0.0;
+                    this.vital_sign.buta_warna = vital_data?.buta_warna || "";
+                    this.vital_sign.keadaan_umum = vital_data?.assesmen_igd?.disability_keadaan_umum || "";
+                    this.vital_sign.skala_nyeri = parseFloat(vital_data?.assesmen_igd?.skala_nyeri) || 0.0;
+                    this.vital_sign.kesadaran = vital_data?.assesmen_igd?.disability_kesadaran || "";
+                    this.vital_sign.alergi = vital_data?.alergi || "";
+                    this.vital_sign.tensi_sistole = parseFloat(layanan?.tensi?.sistole) || 0.0;
+                    this.vital_sign.tensi_diastole = parseFloat(layanan?.tensi?.diastole) || 0.0;
+                    this.vital_sign.nadi = parseFloat(layanan?.nadi) || 0.0;
+                    this.vital_sign.suhu = parseFloat(layanan?.suhu) || 0.0;
+                    this.vital_sign.nafas = parseFloat(layanan?.nafas) || 0.0;
+                    this.vital_sign.anamnesis = layanan?.anamnesis || "";
+                    this.vital_sign.riwayat_penyakit_keluarga = layanan?.riwayat_penyakit_keluarga || "";
+                    this.vital_sign.anamnesis_lalu = layanan?.anamnesis_lalu || "";
+                    this.vital_sign.keluhan_utama = layanan?.keluhan_utama || "";
+                    this.vital_sign.keluhan_utama_perawat = layanan?.keluhan_utama_perawat || "";
+                    this.vital_sign.pemeriksaan_fisik = layanan?.pemeriksaan_fisik || "";
+                    this.vital_sign.pemeriksaan_penunjang = layanan?.pemeriksaan_penunjang || "";
+                    this.vital_sign.plan = layanan?.plan || "";
+                    this.vital_sign.spo2 = layanan?.spo2 || "";
+
+                    // GCS Baru
+                    this.vital_sign.gcs_e = parseFloat(gcsFix?.gcs_e ?? gcsFix?.e) || 0.0;
+                    this.vital_sign.gcs_v = parseFloat(gcsFix?.gcs_v ?? gcsFix?.v) || 0.0;
+                    this.vital_sign.gcs_m = parseFloat(gcsFix?.gcs_m ?? gcsFix?.m) || 0.0;
+                    this.vital_sign.gcs_total = parseFloat(gcsFix?.gcs_total ?? gcsFix?.total) || this.vital_sign.gcs_e + this.vital_sign.gcs_v + this.vital_sign.gcs_m;
+
+                    // Sinkronisasi ke data_gizi
+                    if (this.data_gizi) {
+                        if (this.data_gizi.antropometri) {
+                            if (this.vital_sign.berat_badan) this.data_gizi.antropometri.bb = this.vital_sign.berat_badan;
+                            if (this.vital_sign.tinggi_badan) this.data_gizi.antropometri.tb = this.vital_sign.tinggi_badan;
+                        }
+                        if (this.data_gizi.fisik_klinis) {
+                            const sistole = this.vital_sign.tensi_sistole;
+                            const diastole = this.vital_sign.tensi_diastole;
+                            this.data_gizi.fisik_klinis.td = (sistole || diastole) ? `${sistole}/${diastole}` : "";
+                            this.data_gizi.fisik_klinis.n = this.vital_sign.nadi || "";
+                            this.data_gizi.fisik_klinis.t = this.vital_sign.suhu || "";
+                            this.data_gizi.fisik_klinis.rr = this.vital_sign.nafas || "";
+                        }
+                    }
+
+                    // GCS Lama
+                    // this.vital_sign.gcs_e = vital_data?.assesmen_igd?.gcs_e || "";
+                    // this.vital_sign.gcs_v = vital_data?.assesmen_igd?.gcs_v || "";
+                    // this.vital_sign.gcs_m = vital_data?.assesmen_igd?.gcs_m || "";
+
+                    // tutup modal setelah pilih data
+                    $('#patient_vital_sign_modal').modal('hide');
+                },
+                init: function () {
+                    // Autocomplete function here
+                    autocomplete(configDiagnosaGizi(data));
+                    autocomplete(configDiagnosa(data));
+                    autocomplete(configRuang(data));
+                    autocomplete(configDokter1(data));
+                    autocomplete(configNakes1(data));
+                    this.setupSignature(data);
+
+                    $('#ruang_auto').on('select2:clearing', function (e) {
+                        data.pasien.bangsal = "";
+                        data.pasien.ruang = "";
+                        data.pasien.kelas = "";
+                    });
+
+                    if (operation === "add") {
+                        init_doc_add(data);
+                    }
+                    if (operation === "edit") {
+                        init_doc_edit(data);
+                    }
+                },
+                saveDoc: function () {
+                    this.diagnosa_gizi_group = combineDiagnoses(this.diagnosa_gizi_freetext, this.diagnosa_gizi_list_autocomplete);
+                    this.diagnosa_group = combineDiagnoses(this.diagnosa_freetext, this.diagnosa_list_autocomplete);
+
+                    var json = {
+                        document_history_list_id: doc_id /* built in variable from edoc */,
+                        patient_id: EMRDATA.patient_id,
+                        reg_number: EMRDATA.reg_number,
+                        document: EMRDATA.document_code,
+                        document_title: EMRDATA.document_name,
+                        label: "Poliklinik",
+                        note: "",
+                        data: sanitizeData(data, '`')
+                    };
+
+                    /* built in function from edoc */
+                    save_emr_data(json);
+                },
+                saveDiagUtamaGizi: function () {
+                    // Modified to use diet_data and populate diagnosa_gizi_freetext
+                    this.diagnosa_gizi_freetext = "";
+                    let no = 1;
+
+                    this.index_expand_diagnosa_gizi.forEach((v, i) => {
+                        v.forEach((x, j) => {
+                            if (x.selected) {
+                                const diag = this.external_link.diet_data[i].diagnosa_gizi[j];
+                                // Format: kode_nama - deskripsi_diet_diagnosa_gizi
+                                this.diagnosa_gizi_freetext += `${no}. ${diag.kode_nama} - ${diag.deskripsi_diet_diagnosa_gizi}\n`;
+                                no++;
+                            }
+                        })
+                    })
+
+                    $('#hasilDiagUtamaGiziModal').modal('toggle');
+                },
+                addDiagnosaGizi: function () {
+                    // Modified to push to diagnosa_gizi_list_autocomplete
+                    this.diagnosa_gizi_list_autocomplete.push(...DIAGNOSA_GIZI_TMP)
+                },
+                delDiagnosaGizi: function (i) {
+                    // Modified to splice from diagnosa_gizi_list_autocomplete
+                    if (i > -1) this.diagnosa_gizi_list_autocomplete.splice(i, 1);
+                },
+
+                backupDiagUtamaData: function () {
+                    this.backup_diagnosa = JSON.parse(JSON.stringify(this.index_expand_diagnosa));
+                    this.backup_diagnosa_check_all = this.index_expand_diagnosa_check_all;
+                    this.is_saving_diag = false;
+                },
+                saveDiagUtama: function () {
+                    this.is_saving_diag = true; // Flag aksi simpan
+                    this.diagnosa_freetext = "";
+                    let no = 1;
+
+                    this.index_expand_diagnosa.forEach((v, i) => {
+                        v.forEach((x, j) => {
+                            if (x.selected) {
+                                const diag = this.external_link.diagnosa_list[i].layanan[j];
+                                this.diagnosa_freetext += `${no}. ${diag.icd_x} - ${diag.nama_sebab_sakit} ${diag.deskripsi ? "- " + diag.deskripsi : ""}\n`;
+                                no++;
+                            }
+                        })
+                    })
+
+                    $('#hasilDiagUtamaModal').modal('hide'); // Gunakan hide
+                },
+                addDiagnosa: function () {
+                    this.diagnosa_list_autocomplete.push(...DIAGNOSA_TMP)
+                },
+                delDiagnosa: function (i) {
+                    if (i > -1) this.diagnosa_list_autocomplete.splice(i, 1);
+                },
+
+                navCollapse: function (parentIndex, childIndex, indexExpand) {
+                    this[indexExpand] = this[indexExpand].map((item, i) => {
+                        item.map((subItem, j) => {
+                            subItem.expand = !subItem.expand;
+                            if (i != parentIndex || j != childIndex) {
+                                subItem.expand = false;
+                            }
+                            return subItem;
+                        });
+                        return item;
+                    });
+                },
+
+                checkAllBridgingList: function (indexExpand, isSingleCheck = false, primerFilter = null, sourceName = 'diagnosa_list', childName = 'layanan') {
+                    // Modified to accept sourceName and childName for generic usage
+                    const hasAnyUnselected = this[indexExpand].some((subArray) => {
+                        return subArray.some((item) => !item.selected);
+                    });
+
+                    const areAllSelected = this[indexExpand].every((subArray) => {
+                        return subArray.every((item) => item.selected);
+                    });
+
+                    if (!isSingleCheck) {
+                        // Iterasi array lapis pertama
+                        this[indexExpand].forEach((subArray, parentIndex) => {
+                            // Iterasi array lapis kedua
+                            subArray.forEach((item, childIndex) => {
+                                // Ambil data diagnosa terkait
+
+                                // Jika ada filter primer, cek dulu sebelum set selected
+                                if (primerFilter) {
+                                    // Use dynamic source access
+                                    const diag = this.external_link[sourceName][parentIndex][childName][childIndex];
+                                    if (diag.primer === primerFilter) {
+                                        this.$set(item, "selected", this[`${indexExpand}_check_all`]);
+                                    }
+                                } else {
+                                    // Tanpa filter → set semua
+                                    this.$set(item, "selected", this[`${indexExpand}_check_all`]);
+                                }
+                            });
+                        });
+                    } else {
+                        if (areAllSelected) this[`${indexExpand}_check_all`] = true;
+                        else this[`${indexExpand}_check_all`] = false;
+                    }
+                },
+
+                checkData: function () {
+                    /* built in function from edoc */
+                    preview_emr_data(data);
+                },
+                onChDateDynamic: function (dateData, jsonPath) {
+                    // @change="onChDateDynamic($event, 'penatalaksanaan.tanggal_indo')">
+                    let obj = this;
+                    jsonPathSplit = jsonPath.split(".");
+                    for (i = 0; i < jsonPathSplit.length - 1; i++) {
+                        obj = obj[jsonPathSplit[i]];
+                    }
+                    if (dateData.target.value != "") {
+                        obj[jsonPathSplit[i]] = dateParse(new Date(dateData.target.value));
+                    } else {
+                        obj[jsonPathSplit[i]] = "";
+                    }
+                },
+                hitungStatusGizi: function () {
+                    const antro = this.data_gizi.antropometri;
+                    const sg = this.data_gizi.status_gizi;
+                    const bb = parseFloat(antro.bb);
+                    const tb = parseFloat(antro.tb);
+                    const thn = parseFloat(sg.umur_thn) || 0;
+                    const bln = parseFloat(sg.umur_bln) || 0;
+                    const hr = parseFloat(sg.umur_hr) || 0;
+                    const usia = thn + (bln / 12) + (hr / 365);
+
+                    sg.bb_u = (bb && usia > 0) ? (bb / usia).toFixed(2) : '';
+                    sg.tb_u = (tb && usia > 0) ? (tb / usia).toFixed(2) : '';
+                    sg.bb_tb = (tb && bb > 0) ? (tb / bb).toFixed(2) : '';
+                },
+                setupSignature: function (data) {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                    // Start setup Coretan Canvas
+                    // const canvas1 = this.$refs["ttd_1"];
+                    // this.addCanvasListeners("ttd_1", canvas1);
+
+                    this.$nextTick(() => {
+                        const canvas1 = this.$refs["ttd_1"];
+
+                        if (!canvas1) {
+                            console.warn("[setupSignature] canvas ttd_1 tidak ditemukan");
+                            return;
+                        }
+
+                        this.addCanvasListeners("ttd_1", canvas1);
+                    });
+                    // End setup Coraten Canvas
+
+                    // Start setup autocomplete ketika mode ttd canvas
+                    $("#tandaTanganModal").on("shown.bs.modal", () => {
+                        autocomplete(configTTDModalDokter(data));
+                        autocomplete(configTTDModalNakes(data));
+                        setSelect2("#dokter_ttd_modal_auto", data.tmp_modal_ttd.name, data.tmp_modal_ttd.name);
+                        setSelect2("#nakes_ttd_modal_auto", data.tmp_modal_ttd.name, data.tmp_modal_ttd.name);
+
+                        $("#dokter_ttd_modal_auto").on("select2:clearing", (e) => {
+                            this.tmp_modal_ttd.name = "";
+                            this.tmp_modal_ttd.stroke = "";
+                        });
+
+                        $("#nakes_ttd_modal_auto").on("select2:clearing", (e) => {
+                            this.tmp_modal_ttd.name = "";
+                            this.tmp_modal_ttd.stroke = "";
+                        });
+                    });
+                    // End setup autocomplete ketika mode ttd canvas
+                },
+                addCanvasListeners(name, canvas) {
+                    if (!canvas) {
+                        console.warn(`[addCanvasListeners] canvas ${name} undefined`);
+                        return;
+                    }
+
+                    canvas.addEventListener("mousedown", (e) => this.startDraw(e, name));
+                    canvas.addEventListener("mousemove", (e) => this.moveDraw(e, name));
+                    canvas.addEventListener("mouseup", () => this.stopDraw(name));
+                    canvas.addEventListener("mouseout", () => this.stopDraw(name));
+                    canvas.addEventListener("touchstart", (e) => this.startDraw(e, name));
+                    canvas.addEventListener("touchmove", (e) => this.moveDraw(e, name));
+                    canvas.addEventListener("touchend", () => this.stopDraw(name));
+                },
+                getCoordinates(event, canvas) {
+                    const rect = canvas.getBoundingClientRect();
+                    if (event.touches) {
+                        return { x: event.touches[0].clientX - rect.left, y: event.touches[0].clientY - rect.top };
+                    }
+                    return { x: event.offsetX, y: event.offsetY };
+                },
+                startDraw(event, name) {
+                    event.preventDefault();
+                    const canvas = this.$refs[name];
+                    const drawing = this.drawings[name];
+                    drawing.isDrawing = true;
+                    const { x, y } = this.getCoordinates(event, canvas);
+                    drawing.lastX = x;
+                    drawing.lastY = y;
+                },
+                moveDraw(event, name) {
+                    const canvas = this.$refs[name];
+                    const drawing = this.drawings[name];
+                    if (!drawing.isDrawing) return;
+                    event.preventDefault();
+                    const ctx = canvas.getContext("2d");
+                    ctx.lineWidth = drawing.brushSize;
+                    ctx.strokeStyle = drawing.isErasing ? "rgba(255, 255, 255, 1)" : drawing.brushColor;
+                    ctx.globalCompositeOperation = drawing.isErasing ? "destination-out" : "source-over";
+                    ctx.lineJoin = "round";
+                    ctx.lineCap = "round";
+
+                    const { x, y } = this.getCoordinates(event, canvas);
+                    ctx.beginPath();
+                    ctx.moveTo(drawing.lastX, drawing.lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    drawing.lastX = x;
+                    drawing.lastY = y;
+                },
+                stopDraw(name) {
+                    this.drawings[name].isDrawing = false;
+                },
+                startDrawing(name) {
+                    this.drawings[name].isErasing = false;
+                },
+                startErasing(name) {
+                    this.drawings[name].isErasing = true;
+                },
+                clearCanvas(name, showConfirm = true) {
+                    if (showConfirm) {
+                        Swal.fire({
+                            title: "Apa kamu yakin?",
+                            text: "Anda tidak akan dapat mengembalikan ini!",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "Ya, hapus!",
+                        }).then((result) => {
+                            if (result.isConfirmed || result.value) {
+                                setByPath(this, this.tmp_modal_ttd.path_stroke, "");
+                                const canvas = this.$refs[name];
+                                const ctx = canvas.getContext("2d");
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Coretan Anda telah dihapus",
+                                    showConfirmButton: false,
+                                    timer: 1000,
+                                });
+                            }
+                        });
+                    } else {
+                        const canvas = this.$refs[name];
+                        const ctx = canvas.getContext("2d");
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                },
+                saveAsImage({ name, path_name, path_stroke, isReturn = false }) {
+                    if (this.tmp_modal_ttd.mode_ttd === "QRCODE") {
+                        if (isReturn) return generatorQr(this.drawer_ttd[name].name);
+                        else setByPath(this, path_stroke, generatorQr(getByPath(this, path_name)));
+                    } else if (this.tmp_modal_ttd.mode_ttd === "CANVAS") {
+                        const scaleFactor = 1; // Faktor skala, bisa diatur sesuai kebutuhan
+                        const drawingCanvas = this.$refs[name];
+
+                        // Buat canvas baru untuk menampung hasil
+                        const resizedCanvas = document.createElement("canvas");
+                        resizedCanvas.width = drawingCanvas.width * scaleFactor;
+                        resizedCanvas.height = drawingCanvas.height * scaleFactor;
+
+                        const resizedCtx = resizedCanvas.getContext("2d");
+
+                        // Skalakan gambar latar belakang dan coretan ke canvas yang lebih kecil
+                        resizedCtx.drawImage(drawingCanvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
+
+                        // Konversi hasilnya menjadi PNG base64
+                        const resizedBase64 = resizedCanvas.toDataURL("image/png");
+
+                        // Menyimpan hasil base64 ke array `drawings`
+                        if (isReturn) return resizedBase64;
+                        else setByPath(this, path_stroke, resizedBase64);
+                    }
+                },
+                // Fungsi untuk memuat gambar dari base64 ke canvas
+                loadBase64Image(base64 = null) {
+                    const drawingCanvas = this.$refs["ttd_1"];
+                    const drawingCtx = drawingCanvas.getContext("2d");
+
+                    const drawingImage = new Image();
+                    drawingImage.src = base64; // Muat gambar dari base64 di array drawings
+
+                    drawingImage.onload = () => {
+                        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                        drawingCtx.drawImage(drawingImage, 0, 0, drawingCanvas.width, drawingCanvas.height);
+                    };
+                },
+                openTTDModalHandler: function ({
+                    path_name = "",
+                    path_stroke = "",
+                    mode_ttd = "",
+                    label = "Penandatangan",
+                    name_input_type = "TEXT",
+                }) {
+                    this.clearCanvas("ttd_1", false);
+                    this.tmp_modal_ttd.name = "";
+                    const stroke = getByPath(this, path_stroke);
+                    this.tmp_modal_ttd.name = getByPath(this, path_name);
+                    this.tmp_modal_ttd.name_input_type = name_input_type;
+                    this.tmp_modal_ttd.label = label;
+                    this.tmp_modal_ttd.path_name = path_name;
+                    this.tmp_modal_ttd.path_stroke = path_stroke;
+                    this.tmp_modal_ttd.mode_ttd = mode_ttd;
+
+                    if (stroke || this.tmp_modal_ttd.name) this.tmp_modal_ttd.mode = "edit";
+                    else this.tmp_modal_ttd.mode = "add";
+
+                    if (this.tmp_modal_ttd.mode === "add") {
+                        this.tmp_modal_ttd.title = "Tambah Tanda Tangan";
+                    } else if (this.tmp_modal_ttd.mode === "edit") {
+                        setSelect2("#dokter_ttd_modal_auto", this.tmp_modal_ttd.name, this.tmp_modal_ttd.name);
+                        this.tmp_modal_ttd.title = "Edit Tanda Tangan";
+                        this.loadBase64Image(getByPath(this, path_stroke));
+                    }
+                },
+                saveTTDHandler: function (isAutoComplete = false) {
+                    const drawingCanvas = this.$refs["ttd_1"];
+
+                    setByPath(this, this.tmp_modal_ttd.path_name, this.tmp_modal_ttd.name);
+
+                    if (!isCanvasBlank(drawingCanvas) || this.tmp_modal_ttd.mode_ttd === "QRCODE") {
+                        this.saveAsImage({
+                            name: "ttd_1",
+                            path_name: this.tmp_modal_ttd.path_name,
+                            path_stroke: this.tmp_modal_ttd.path_stroke,
+                        });
+                    }
+
+                    this.tmp_modal_ttd = {
+                        name: "",
+                        title: "",
+                        label: "",
+                        mode: "",
+                        mode_ttd: "",
+                        path_name: "",
+                        path_stroke: "",
+                        name_input_type: "",
+                    };
+                },
+            },
+        });
+    }
+
+    function init_doc_add(data) {
+        // Call bridging function here
+        executeAllSafely([
+            {
+                label: "bridging list diagnosis gizi",
+                functionName: bridgingListDiagnosisGizi,
+                parameters: [data]
+            },
+            {
+                label: "bridging list diagnosis",
+                functionName: bridgingListDiagnosis,
+                parameters: [data]
+            },
+            {
+                label: "bridging vital sign",
+                functionName: bridgingVitalSign,
+                parameters: [data]
+            },
+            {
+                label: "Setup Auto",
+                functionName: setupAuto,
+                parameters: [data]
+            },
+            {
+                label: "Bridging Dokter DPJP",
+                functionName: bridgingDokterDPJP,
+                parameters: [data]
+            },
+            {
+                label: "Bridging Patient Data",
+                functionName: bridgingPatientData,
+                parameters: [data]
+            },
+            {
+                label: "Bridging Inpatient Information",
+                functionName: bridgingInpatientInformation,
+                parameters: [data]
+            },
+        ]);
+    }
+
+    function init_doc_edit(data) {
+        // Call bridging function here
+        executeAllSafely([
+            {
+                label: "bridging list diagnosis gizi [EDIT]",
+                functionName: bridgingListDiagnosisGizi,
+                parameters: [data]
+            },
+            {
+                label: "Bridging list diagnosis [EDIT]",
+                functionName: bridgingListDiagnosis,
+                parameters: [data]
+            },
+            {
+                label: "Bridging list vitalsign [EDIT]",
+                functionName: bridgingVitalSign,
+                parameters: [data, "edit"]
+            },
+            {
+                label: "Bridging Dokter DPJP [EDIT]",
+                functionName: bridgingDokterDPJP,
+                parameters: [data]
+            },
+            {
+                label: "Bridging Patient Data [EDIT]",
+                functionName: bridgingPatientData,
+                parameters: [data]
+            },
+            {
+                label: "Bridging Inpatient Information [EDIT]",
+                functionName: bridgingInpatientInformation,
+                parameters: [data, "edit"]
+            },
+        ]);
+    }
+
+    // Bridging function here
+    function bridgingListDiagnosisGizi(data) {
+        // Check if diet_data exists and has exactly one entry
+        if (Array.isArray(data.external_link.diet_data) && data.external_link.diet_data.length === 1) {
+            let hasilDiagnosa = "";
+            const dietEntry = data.external_link.diet_data[0];
+
+            // Check if diagnosa_gizi exists AND has exactly one entry
+            if (Array.isArray(dietEntry.diagnosa_gizi) && dietEntry.diagnosa_gizi.length === 1) {
+                dietEntry.diagnosa_gizi.forEach((v, i) => {
+                    // Format: No. kode_nama - deskripsi_diet_diagnosa_gizi
+                    hasilDiagnosa += `${i + 1}. ${v.kode_nama} - ${v.deskripsi_diet_diagnosa_gizi}\n`;
+                });
+                data.diagnosa_gizi_freetext = hasilDiagnosa;
+            }
+        }
+    }
+
+    function bridgingVitalSign(data, operation = "add") {
+        if (operation === "edit") {
+            // Pada mode edit, gunakan data value terakhir yang sudah tersimpan, jangan timpa dengan bridging awal
+            if (data.data_gizi?.fisik_klinis) {
+                const fk = data.data_gizi.fisik_klinis;
+                // Jika fisik_klinis masih kosong tapi data.vital_sign memiliki nilai tersimpan, sinkronisasikan
+                if (!fk.td && (data.vital_sign?.tensi_sistole || data.vital_sign?.tensi_diastole)) {
+                    const sistole = data.vital_sign.tensi_sistole;
+                    const diastole = data.vital_sign.tensi_diastole;
+                    fk.td = (sistole || diastole) ? `${sistole}/${diastole}` : "";
+                }
+                if (!fk.n && data.vital_sign?.nadi) fk.n = data.vital_sign.nadi;
+                if (!fk.t && data.vital_sign?.suhu) fk.t = data.vital_sign.suhu;
+                if (!fk.rr && data.vital_sign?.nafas) fk.rr = data.vital_sign.nafas;
+            }
+            return;
+        }
+
+        if (data.external_link?.vital_sign_data_list?.length) {
+            // Mengambil nilai dari visitasi terbaru
+            const vital_data = data.external_link.vital_sign_data_list[0];
+            const layanan = vital_data?.layanan && vital_data.layanan.length > 0 ? vital_data.layanan[0] : {};
+
+            // Mengambil gcs sesuai jenis layanan
+            const gcsFix = vital_data.jenis_layanan === "IGD" ? vital_data?.assesmen_igd : layanan?.gcs;
+
+            // auto expand di modal untuk data yang udah ke bridging
+            setTimeout(() => {
+                const collapseId = 'collapse_' + vital_data.id_layanan_pendaftaran + '_0';
+                $('#' + collapseId).collapse('show');
+            }, 500);
+
+            // 1. Assign ke data.vital_sign secara langsung (tanpa fungsi assignIfEmpty)
+            data.vital_sign.tinggi_badan = parseFloat(vital_data?.tinggi_badan || layanan?.tinggi_badan) || 0.0;
+            data.vital_sign.berat_badan = parseFloat(vital_data?.berat_badan || layanan?.berat_badan) || 0.0;
+            data.vital_sign.buta_warna = vital_data?.buta_warna || "";
+            data.vital_sign.keadaan_umum = vital_data?.assesmen_igd?.disability_keadaan_umum || "";
+            data.vital_sign.skala_nyeri = parseFloat(vital_data?.assesmen_igd?.skala_nyeri) || 0.0;
+            data.vital_sign.kesadaran = vital_data?.assesmen_igd?.disability_kesadaran || "";
+            data.vital_sign.alergi = vital_data?.alergi || "";
+
+            data.vital_sign.tensi_sistole = parseFloat(layanan?.tensi?.sistole) || 0.0;
+            data.vital_sign.tensi_diastole = parseFloat(layanan?.tensi?.diastole) || 0.0;
+            data.vital_sign.nadi = parseFloat(layanan?.nadi) || 0.0;
+            data.vital_sign.suhu = parseFloat(layanan?.suhu) || 0.0;
+            data.vital_sign.nafas = parseFloat(layanan?.nafas) || 0.0;
+            data.vital_sign.anamnesis = layanan?.anamnesis || "";
+            data.vital_sign.riwayat_penyakit_keluarga = layanan?.riwayat_penyakit_keluarga || "";
+            data.vital_sign.anamnesis_lalu = layanan?.anamnesis_lalu || "";
+            data.vital_sign.keluhan_utama = layanan?.keluhan_utama || "";
+            data.vital_sign.keluhan_utama_perawat = layanan?.keluhan_utama_perawat || "";
+            data.vital_sign.pemeriksaan_fisik = layanan?.pemeriksaan_fisik || "";
+            data.vital_sign.pemeriksaan_penunjang = layanan?.pemeriksaan_penunjang || "";
+            data.vital_sign.plan = layanan?.plan || "";
+            data.vital_sign.spo2 = layanan?.spo2 || "";
+
+            data.vital_sign.gcs_e = parseFloat(gcsFix?.gcs_e ?? gcsFix?.e) || 0.0;
+            data.vital_sign.gcs_v = parseFloat(gcsFix?.gcs_v ?? gcsFix?.v) || 0.0;
+            data.vital_sign.gcs_m = parseFloat(gcsFix?.gcs_m ?? gcsFix?.m) || 0.0;
+            data.vital_sign.gcs_total = parseFloat(gcsFix?.gcs_total ?? gcsFix?.total) || (data.vital_sign.gcs_e + data.vital_sign.gcs_v + data.vital_sign.gcs_m);
+
+            // 2. Mapping ke objek data_gizi agar langsung terisi di Form HTML
+            if (data.data_gizi) {
+                // Bridging Antropometri (BB & TB)
+                data.data_gizi.antropometri.bb = data.vital_sign.berat_badan || "";
+                data.data_gizi.antropometri.tb = data.vital_sign.tinggi_badan || "";
+
+                // Bridging Vital Sign (TD, N, T, RR)
+                const sistole = data.vital_sign.tensi_sistole;
+                const diastole = data.vital_sign.tensi_diastole;
+                data.data_gizi.fisik_klinis.td = (sistole || diastole) ? `${sistole}/${diastole}` : "";
+                data.data_gizi.fisik_klinis.n = data.vital_sign.nadi || "";
+                data.data_gizi.fisik_klinis.t = data.vital_sign.suhu || "";
+                data.data_gizi.fisik_klinis.rr = data.vital_sign.nafas || "";
+            }
+        }
+    }
+
+    function bridgingListDiagnosis(data) {
+        if (data.external_link.diagnosa_list.length === 1) {
+            let hasilDiagnosa = "";
+            data.external_link.diagnosa_list[0].layanan.forEach((v, i) => {
+                hasilDiagnosa += `${i + 1}. ${v.icd_x} - ${v.nama_sebab_sakit} ${v.deskripsi ? "- " + v.deskripsi : ""}\n`;
+            });
+
+            data.diagnosa_freetext = hasilDiagnosa;
+        }
+    }
+
+    function setupAuto(data) {
+        // Sesuaikan data disini
+        data.ttd_data.jam = timeNow().time; // Jam sekarang
+        data.ttd_data.tanggal = timeNow().date; // Tanggal sekarang
+        data.ttd_data.tanggal_indo = dateParse(new Date(timeNow().date)); // Tanggal sekarang Indo
+    }
+
+    function bridgingPatientData(data) {
+        const ext_patient = data.external_link.px_data;
+
+        // sesuaikan dengan kebutuhan dokumen
+        data.pasien.nama = ext_patient.nama || "";
+        data.pasien.no_rm = ext_patient.no_rm || "";
+        data.pasien.no_identitas = ext_patient.no_identitas || "";
+        data.pasien.alamat = ext_patient.alamat || "";
+        data.pasien.tempat_lahir = ext_patient.tempat_lahir || "";
+        data.pasien.pekerjaan = ext_patient.pekerjaan || "";
+        data.pasien.agama = ext_patient.agama || "";
+        data.pasien.pendidikan = ext_patient.pendidikan || "";
+        data.pasien.tanggal_lahir = ext_patient.tanggal_lahir || "";
+        data.pasien.tanggal_lahir_indo = dateParse(new Date(ext_patient.tanggal_lahir || "")); // tanggal lahir indo
+        data.pasien.kelamin = showKelamin(ext_patient.kelamin);
+        data.pasien.umur = getAge(ext_patient.tanggal_lahir).toString() || "";
+
+        // Bridging Umur Status Gizi (tahun, bulan, hari)
+        if (data.data_gizi && data.data_gizi.status_gizi) {
+            const umurDetail = hitungUmurDetail(ext_patient.tanggal_lahir || data.pasien.tanggal_lahir);
+            if (umurDetail) {
+                data.data_gizi.status_gizi.umur_thn = umurDetail.thn;
+                data.data_gizi.status_gizi.umur_bln = umurDetail.bln;
+                data.data_gizi.status_gizi.umur_hr = umurDetail.hr;
+            } else if (data.pasien.umur) {
+                data.data_gizi.status_gizi.umur_thn = parseInt(data.pasien.umur) || 0;
+                data.data_gizi.status_gizi.umur_bln = 0;
+                data.data_gizi.status_gizi.umur_hr = 0;
+            }
+        }
+
+        // untuk tanda tangan pasien image
+        // data.ttd_data.pasien_stroke = getUrlHandler() + `patient/${data.external_link.px_data.no_rm}.png?t=` + new Date().getTime();
+    }
+
+    function bridgingDokterDPJP(data) {
+        const dpjp = data.external_link?.dokter_dpjp_data?.nama_dokter_dpjp || "";
+        data.ttd_data.dokter = dpjp;
+
+        setSelect2($("#dokter_auto1"), dpjp, dpjp);
+
+        // Jika TTD dokter menggunakan Image
+        // const ttd_image = data.external_link?.dokter_dpjp_data?.ttd_image;
+        // data.ttd_data.dokter_stroke = ttd_image ? getUrlHandler() + ttd_image : "";
+
+        // Jika TTD dokter menggunakan QR Code
+        setTimeout(() => {
+            data.ttd_data.dokter_stroke = generatorQr(dpjp);
+        }, 1000);
+    }
+
+    function bridgingInpatientInformation(data, operation = "add") {
+        if (operation === "edit") {
+            // Bridging ruangan
+            setSelect2($("#ruang_auto"), data.pasien.ruang, data.pasien.ruang);
+        } else {
+            // Bridging ruangan
+            const ruang = data.external_link.inpatient_information.no_ruang || "";
+            data.pasien.ruang = data.external_link.inpatient_information.no_ruang || "";
+            data.pasien.bangsal = data.external_link.inpatient_information.nama_bangsal || "";
+            data.pasien.kelas = data.external_link.inpatient_information.nama_kelas || "";
+            setSelect2($("#ruang_auto"), ruang, ruang);
+
+            // Bridging waktu masuk
+            data.pasien.tanggal_masuk = dateTimeParse(data.external_link.inpatient_information.waktu_masuk).date;
+            // data.pasien.tanggal_masuk_indo = dateTimeParse(data.external_link.inpatient_information.waktu_masuk).dateWithMonthName;
+            data.pasien.jam_masuk = dateTimeParse(data.external_link.inpatient_information.waktu_masuk).time;
+        }
+    }
+
+    // Custom and another function here
+    function combineDiagnoses(diagnosisFreetext, diagnosisList, isKeperawatan = false) {
+        // === Tahap 1: Memproses nilai pertama (string) ===
+        // Hapus nomor urut awal dari setiap baris, lalu trim dan filter yang kosong.
+        const textDiagnosaArray = diagnosisFreetext
+            .split("\n")
+            .map(item => {
+                // Regex untuk menghapus nomor urut dan titik di awal, diikuti spasi.
+                // Contoh: "1. " atau "2. " akan dihapus.
+                const cleanedItem = item.replace(/^\d+\.\s*/, '').trim();
+                return cleanedItem;
+            })
+            .filter(item => item !== ""); // Filter baris kosong setelah pembersihan
+
+        // === Tahap 2: Memproses nilai kedua (array objek) ===
+        // Gabungkan diagnosa_kerja_list ke dalam format string yang diinginkan
+        const listDiagnosaArray = diagnosisList.map(item => {
+            if (isKeperawatan) {
+                // khusus untuk diagnosa keperawatan
+                return `${item.code} - ${item.nama}`;
+            } else if (item.kode_nama) {
+                // untuk diagnosa gizi 
+                return `${item.kode_nama} - ${item.deskripsi_diet_diagnosa_gizi || ""}`;
+            } else {
+                // Asumsi item.deskripsi tidak ada di sini, jika ada bisa ditambahkan
+                return `${item.icd_x} - ${item.nama_sebab_sakit}`;
+            }
+        });
+
+        // === Tahap 3: Gabungkan kedua array dan berikan nomor urut baru ===
+        const combinedDiagnoses = [...textDiagnosaArray, ...listDiagnosaArray];
+
+        // Berikan nomor urut baru ke setiap item dalam array gabungan
+        if (combinedDiagnoses && combinedDiagnoses.length > 0) {
+            return combinedDiagnoses
+                .map((item, index) => `${index + 1}. ${item}`)
+                .join("\n");
+        } else {
+            return "-";
+        }
+    }
+
+    function setupIndexExpand(data, indexExpand, external_link_name, with_layanan = 'layanan') {
+        const checkAll = `${indexExpand}_check_all`;
+        if (typeof data[checkAll] === "undefined") data[checkAll] = false;
+        if (typeof data[indexExpand] === "undefined") data[indexExpand] = [];
+
+        let indexExpandTmp = data.external_link[external_link_name].map((v, i) => {
+            if (with_layanan) {
+                return v[with_layanan].map((x, j) => ({ expand: false, selected: false }));
+            }
+            else {
+                return [{ expand: false, selected: false }];
+            }
+        });
+
+        for (let i = 0; i < indexExpandTmp.length; i++) {
+            if (data[indexExpand][i] === undefined || data[indexExpand][i].length === 0) {
+                data[indexExpand][i] = indexExpandTmp[i];
+            } else {
+                for (let j = 0; j < indexExpandTmp[i].length; j++) {
+                    if (data[indexExpand][i][j] === undefined) {
+                        data[indexExpand][i][j] = indexExpandTmp[i][j];
+                    }
+                }
+            }
+        }
+    }
+
+    function executeAllSafely(tasks = []) {
+        if (!Array.isArray(tasks)) {
+            console.error("executeAllSafely membutuhkan array.");
+            return;
+        }
+
+        tasks.forEach(task => {
+            executeSafely(task);
+        });
+    }
+
+    function executeSafely({
+        label,
+        functionName,
+        parameters = [],
+        context = null,
+        throwError = false
+    }) {
+        try {
+
+            // Validasi: memastikan target benar-benar sebuah function
+            if (typeof functionName !== "function") {
+                throw new Error(`Target bukan function pada label: ${label}`);
+            }
+
+            // Eksekusi function:
+            // Jika ada context → pakai apply() supaya 'this' tetap terikat
+            // Jika tidak ada context → panggil normal dengan spread parameter
+            const result = context
+                ? functionName.apply(context, parameters)
+                : functionName(...parameters);
+
+            // Log jika berhasil
+            console.info(`✅[SUCCESS] ${label}`);
+
+            // Kembalikan hasil asli dari function
+            return result;
+
+        } catch (error) {
+
+            // Log error dengan grouping agar rapi di console
+            console.group(`❌ [ERROR] ${label}`);
+            console.error("Message:", error.message);
+            // console.error("Stack:", error.stack);      // Aktifkan jika perlu debug lebih detail
+            // console.error("Arguments:", parameters);   // Aktifkan jika perlu cek parameter
+            console.groupEnd();
+
+            // Jika ingin error tetap dilempar ke luar (opsional)
+            if (throwError) {
+                throw error;
+            }
+
+            // Jika terjadi error, kembalikan null agar tidak memutus alur program
+            return null;
+        }
+    }
+
+    function hitungUmurDetail(tglLahirStr) {
+        if (!tglLahirStr) return null;
+        const birthDate = new Date(tglLahirStr);
+        if (isNaN(birthDate.getTime())) return null;
+
+        const today = new Date();
+        let years = today.getFullYear() - birthDate.getFullYear();
+        let months = today.getMonth() - birthDate.getMonth();
+        let days = today.getDate() - birthDate.getDate();
+
+        if (days < 0) {
+            const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+            days += prevMonthLastDay;
+            months--;
+        }
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        return {
+            thn: Math.max(0, years),
+            bln: Math.max(0, months),
+            hr: Math.max(0, days)
+        };
+    }
+
+    function dateParse(date) {
+        const monthNames = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+        let dateInput = date;
+        const yyyy = dateInput.getFullYear();
+        let mm = dateInput.getMonth() + 1; // Months start at 0!
+        let dd = dateInput.getDate();
+        let month = monthNames[mm - 1];
+
+        if (dd < 10) dd = "0" + dd;
+        if (mm < 10) mm = "0" + mm;
+
+        // dateInput = `${yyyy}-${mm}-${dd}`;
+        let dateDisplay = `${dd} ${month} ${yyyy}`;
+        // return {dateInput, dateDisplay}
+        return dateDisplay;
+    }
+
+    function dateTimeParse(dateString) {
+        // Mengubah string menjadi objek Date
+        let dateInput = new Date(dateString);
+
+        // Mendapatkan bagian tanggal
+        const yyyy = dateInput.getFullYear();
+        let mm = dateInput.getMonth() + 1; // Bulan dimulai dari 0, jadi tambahkan 1
+        let dd = dateInput.getDate();
+
+        // Daftar nama bulan
+        const monthNames = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+
+        // Menambahkan leading zero jika diperlukan
+        if (dd < 10) dd = "0" + dd;
+        if (mm < 10) mm = "0" + mm; // Menambahkan leading zero untuk bulan jika kurang dari 10
+
+        // Format tanggal biasa (yyyy-mm-dd)
+        let dateDisplay = `${yyyy}-${mm}-${dd}`;
+
+        // Format tanggal dengan nama bulan (dd NamaBulan yyyy)
+        let dateWithMonthName = `${dd} ${monthNames[mm - 1]} ${yyyy}`; // Indeks bulan di array dimulai dari 0
+
+        // Mendapatkan bagian waktu
+        let hours = dateInput.getHours();
+        let minutes = dateInput.getMinutes();
+
+        // Menambahkan leading zero jika diperlukan untuk waktu
+        if (hours < 10) hours = "0" + hours;
+        if (minutes < 10) minutes = "0" + minutes;
+
+        // Format waktu dalam format 24 jam (hh:mm)
+        let timeDisplay = `${hours}:${minutes}`;
+
+        // Mengembalikan objek dengan tanggal, waktu, dan tanggal dengan nama bulan
+        return { date: dateDisplay, time: timeDisplay, dateWithMonthName: dateWithMonthName };
+    }
+
+    function generatorQr(el) {
+        let elgenerateqr = document.createElement("div");
+        elgenerateqr.id = "elgenerateqr";
+
+        let objqrcode = new QRCode(elgenerateqr, el);
+        return elgenerateqr.querySelector("canvas").toDataURL();
+    }
+
+    function getByPath(obj, path) {
+        return path
+            .replace(/\[(\d+)\]/g, ".$1") // Ubah [0] jadi .0
+            .split(".") // Pisahkan dengan titik
+            .reduce((acc, part) => acc && acc[part], obj);
+    }
+
+    function setByPath(obj, path, value) {
+        const parts = path.replace(/\[(\d+)\]/g, ".$1").split(".");
+        let current = obj;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i];
+            if (!(part in current)) {
+                // otomatis buat objek/array baru jika belum ada
+                current[part] = isNaN(Number(parts[i + 1])) ? {} : [];
+            }
+            current = current[part];
+        }
+
+        current[parts[parts.length - 1]] = value;
+    }
+
+    function isCanvasBlank(canvas) {
+        const context = canvas.getContext("2d");
+        const pixelBuffer = new Uint32Array(context.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+
+        return !pixelBuffer.some((color) => color !== 0);
+    }
+
+    function getUrlHandler() {
+        return window.location.hostname === IP_WG ? URL_IMAGE_SEVER_WG : URL_IMAGE_SEVER_LOCAL;
+    }
+
+    function showKelamin(code) {
+        return code === "P" ? "Perempuan" : code === "L" ? "Laki-laki" : "Jenis kelamin tidak dikenal";
+    }
+
+    // Global autogrow mechanism for textareas
+    function autoGrow(element) {
+        // Set base height (setara dengan +/- 3 baris) agar tidak terlalu menciut
+        element.style.height = "75px";
+        // Sesuaikan tinggi dengan scrollHeight
+        element.style.height = (element.scrollHeight + 2) + "px";
+    }
+
+    document.addEventListener("input", function (e) {
+        if (e.target.tagName.toLowerCase() === "textarea") {
+            autoGrow(e.target);
+        }
+    });
+
+    function sanitizeData(data, replaceChar = ' ') {
+        if (typeof data === 'string') {
+            return data.replace(/'/g, replaceChar);
+        } else if (Array.isArray(data)) {
+            return data.map(item => sanitizeData(item, replaceChar));
+        } else if (typeof data === 'object' && data !== null) {
+            const sanitizedObject = {};
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    sanitizedObject[key] = sanitizeData(data[key], replaceChar);
+                }
+            }
+            return sanitizedObject;
+        } else {
+            return data;
+        }
+    }
+</script>
+<style>
+    /* Custom style here */
+    .garis {
+        height: 1px;
+        border-width: 0;
+        color: gray;
+        background-color: gray;
+        margin-block: 1.5rem;
+    }
+
+    .garis-tebal {
+        height: 1px;
+        border-width: 2px;
+        color: black;
+        background-color: gray;
+        margin-block: 1.5rem;
+    }
+
+    table th {
+        text-align: center;
+    }
+
+    table tbody td {
+        vertical-align: middle !important;
+    }
+
+    .ttd-img {
+        width: 150px;
+        height: 100px;
+        object-fit: contain;
+        /* atau contain tergantung kebutuhan */
+        border: 1px solid #ccc;
+    }
+
+    /* Style untuk indentitas pasien */
+    .patient-card {
+        /* border-left: 5px solid #007bff; */
+    }
+
+    .data-label {
+        font-size: 0.8rem;
+        color: black;
+        /* Warna abu-abu untuk label */
+        text-transform: uppercase;
+        margin-bottom: 0;
+        line-height: 1;
+        padding-left: 0.2em;
+        font-weight: bold;
+    }
+
+    .data-value {
+        font-weight: 500;
+        color: #343a40;
+        line-height: 1.2;
+        width: 100%;
+        border: none;
+    }
+
+    .main-name {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #007bff;
+        /* Biru untuk Nama */
+    }
+
+    .main-rm {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #dc3545;
+        /* Merah untuk No RM */
+    }
+
+    .gizi-card-header {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    /* Hapus spinner number pada umur */
+    .no-spinner::-webkit-outer-spin-button,
+    .no-spinner::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .no-spinner {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+</style>
+<form id="formadd" class="form-label-left input_mask col-md-12">
+    <div class="row my-4">
+        <div class="col-12 d-flex align-items-center justify-content-center">
+            <h4 class="text-center"><b>Asuhan Gizi Anak</b></h4>
+        </div>
+    </div>
+
+    <!-- Pasien Info Data -->
+    <div class="card patient-card shadow-sm" id="pasien-info">
+        <div class="card-header bg-light">
+            <h5 class="mb-0 text-dark">Data Identitas Pasien</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 border-right">
+                    <div class="mb-3">
+                        <p class="data-label">Nama</p>
+                        <input id="pasien_nama" type="text" class="data-value" v-model="pasien.nama" />
+                    </div>
+                    <div class="mb-3">
+                        <p class="data-label">Kelamin</p>
+                        <input id="pasien_kelamin" type="text" class="data-value" v-model="pasien.kelamin" />
+                    </div>
+                    <div class="mb-3">
+                        <p class="data-label">Alamat</p>
+                        <input id="pasien_alamat" type="text" class="data-value" v-model="pasien.alamat" />
+                    </div>
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Pekerjaan</p>-->
+                    <!--    <input id="pasien_pekerjaan" type="text" class="data-value" v-model="pasien.pekerjaan" />-->
+                    <!--</div>-->
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Pendidikan</p>-->
+                    <!--    <input id="pasien_pendidikan" type="text" class="data-value" v-model="pasien.pendidikan" />-->
+                    <!--</div>-->
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Agama</p>-->
+                    <!--    <input id="pasien_agama" type="text" class="data-value" v-model="pasien.agama" />-->
+                    <!--</div>-->
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <p class="data-label">No RM</p>
+                        <input id="pasien_no_rm" type="text" class="data-value" v-model="pasien.no_rm" />
+                    </div>
+                    <div class="mb-3">
+                        <p class="data-label">Tanggal Lahir</p>
+                        <input id="pasien_tanggal_lahir" type="date" class="data-value"
+                            v-model="pasien.tanggal_lahir" />
+                    </div>
+                    <div class="mb-3">
+                        <p class="data-label">Ruang</p>
+                        <select class="form-control" id="ruang_auto" name="ruang_tmp" style="width: 100%"></select>
+                    </div>
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Tempat Lahir</p>-->
+                    <!--    <input id="pasien_tempat_lahir" type="text" class="data-value" v-model="pasien.tempat_lahir" />-->
+                    <!--</div>-->
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Umur</p>-->
+                    <!--    <input id="pasien_umur" type="text" class="data-value" v-model="pasien.umur" style="width:9%" />-->
+                    <!--    <span>Tahun</span>-->
+                    <!--</div>-->
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Tanggal Masuk</p>-->
+                    <!--    <input id="pasien_tanggal_masuk" type="date" class="data-value"-->
+                    <!--        v-model="pasien.tanggal_masuk" />-->
+                    <!--</div>-->
+                    <!--<div class="mb-3">-->
+                    <!--    <p class="data-label">Jam Masuk</p>-->
+                    <!--    <input id="pasien_jam_masuk" type="time" class="data-value" v-model="pasien.jam_masuk" />-->
+                    <!--</div>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Pasien Info Data -->
+
+    <!-- REVISI 1: TANGGAL & DPJP -->
+    <div class="card shadow-sm mt-3 mb-3">
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-md-6 border-right">
+                    <div class="form-group row mb-0 align-items-center">
+                        <label class="col-sm-3 col-form-label font-weight-bold">Tanggal :</label>
+                        <div class="col-sm-9">
+                            <input type="date" class="form-control form-control-sm" v-model="data_gizi.tanggal">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group row mb-0 align-items-center">
+                        <label class="col-sm-3 col-form-label font-weight-bold">DPJP :</label>
+                        <div class="col-sm-9">
+                            <select class="form-control form-control-sm" id="dokter_auto1" style="width: 100%"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIAGNOSA MEDIS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header gizi-card-header">Diagnosa Medis</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 mb-2">
+                    <button v-if="external_link?.diagnosa_list?.length > 1" type="button" title="Riwayat diagnosa"
+                        data-toggle="modal" data-target="#hasilDiagUtamaModal" class="btn btn-info btn-sm mb-2"
+                        @click="backupDiagUtamaData">
+                        Pilih hasil diagnosis
+                    </button>
+                    <textarea type="text" style="white-space: pre-wrap" class="form-control" v-model="diagnosa_freetext"
+                        id="diagnosis"></textarea>
+                </div>
+                <div class="col-md-12">
+                    <div class="row mb-2 justify-content-center">
+                        <div class="col-md-8 pr-0">
+                            <select class="form-control" id="icdx_auto1" name="icdx_tmp" style="width: 100%"></select>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <button type="button" style="width: 100%; height: 100%" @click="addDiagnosa()"
+                                class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Tambah Data</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Looping autocomplete diagnosa -->
+                <div class="col-md-12" v-for="(item, key) in diagnosa_list_autocomplete" :key="key">
+                    <div class="row mb-2">
+                        <div class="col-md-10">
+                            <div>{{key+1}}. {{item.icd_x}} - {{item.nama_sebab_sakit}}</div>
+                        </div>
+                        <div class="col-md-2 text-right"><button type="button" @click="delDiagnosa(key)"
+                                class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <!-- Kolom Kiri: Antropometri -->
+                <div class="col-md-6 border-right pr-md-4">
+                    <h5 class="font-weight-bold border-bottom pb-2 mb-3">Antropometri</h5>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">BB :</label>
+                        <div class="col-sm-7">
+                            <input type="number" min="0" step="any" class="form-control form-control-sm"
+                                v-model="data_gizi.antropometri.bb"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.antropometri.bb < 0) data_gizi.antropometri.bb = 0">
+                        </div>
+                        <span class="col-sm-2 col-form-label-sm px-0">Kg</span>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">TB :</label>
+                        <div class="col-sm-7">
+                            <input type="number" min="0" step="any" class="form-control form-control-sm"
+                                v-model="data_gizi.antropometri.tb"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.antropometri.tb < 0) data_gizi.antropometri.tb = 0">
+                        </div>
+                        <span class="col-sm-2 col-form-label-sm px-0">Cm</span>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">LILA :</label>
+                        <div class="col-sm-7">
+                            <input type="number" min="0" step="any" class="form-control form-control-sm"
+                                v-model="data_gizi.antropometri.lila"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.antropometri.lila < 0) data_gizi.antropometri.lila = 0">
+                        </div>
+                        <span class="col-sm-2 col-form-label-sm px-0">Cm</span>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">TL/RL :</label>
+                        <div class="col-sm-7">
+                            <input type="number" min="0" step="any" class="form-control form-control-sm"
+                                v-model="data_gizi.antropometri.tl_rl"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.antropometri.tl_rl < 0) data_gizi.antropometri.tl_rl = 0">
+                        </div>
+                        <span class="col-sm-2 col-form-label-sm px-0">Cm</span>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">BBI :</label>
+                        <div class="col-sm-7">
+                            <input type="number" min="0" step="any" class="form-control form-control-sm"
+                                v-model="data_gizi.antropometri.bbi"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.antropometri.bbi < 0) data_gizi.antropometri.bbi = 0">
+                        </div>
+                        <span class="col-sm-2 col-form-label-sm px-0">Kg</span>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Status Gizi -->
+                <div class="col-md-6 pl-md-4 mt-3 mt-md-0">
+                    <h5 class="font-weight-bold border-bottom pb-2 mb-3">Status Gizi</h5>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">BB/U :</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control form-control-sm" v-model="data_gizi.status_gizi.bb_u"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">TB/U :</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control form-control-sm" v-model="data_gizi.status_gizi.tb_u"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">BB/TB :</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control form-control-sm"
+                                v-model="data_gizi.status_gizi.bb_tb" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">LLA/U :</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control form-control-sm"
+                                v-model="data_gizi.status_gizi.lla_u">
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-2 align-items-center">
+                        <label class="col-sm-3 col-form-label">Umur :</label>
+                        <div class="col-sm-9 d-flex align-items-center">
+                            <input type="number" min="0" class="form-control form-control-sm mr-1 no-spinner"
+                                v-model="data_gizi.status_gizi.umur_thn" style="width: 60px;"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.status_gizi.umur_thn < 0) data_gizi.status_gizi.umur_thn = 0">
+                            <span class="mr-2">th</span>
+                            <input type="number" min="0" class="form-control form-control-sm mr-1 no-spinner"
+                                v-model="data_gizi.status_gizi.umur_bln" style="width: 60px;"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.status_gizi.umur_bln < 0) data_gizi.status_gizi.umur_bln = 0">
+                            <span class="mr-2">bln</span>
+                            <input type="number" min="0" class="form-control form-control-sm mr-1 no-spinner"
+                                v-model="data_gizi.status_gizi.umur_hr" style="width: 60px;"
+                                @keydown="if ($event.key === '-') $event.preventDefault()"
+                                @input="if (data_gizi.status_gizi.umur_hr < 0) data_gizi.status_gizi.umur_hr = 0">
+                            <span>hr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIOKIMIA -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header gizi-card-header">Biokimia</div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Kolom 1 (1-4) -->
+                <div class="col-md-3 border-right">
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">1. HB :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.hb">
+                        <small class="form-text text-muted">
+                            (Lk : 14 – 18 g/dl)<br>
+                            (Pr : 12 – 16 g/dl)
+                        </small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">2. Kreatinin :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.kreatinin">
+                        <small class="form-text text-muted">
+                            (L : 0,6 – 1,1 mg/dl)<br>
+                            (P : 0,45 – 0,75 g/dl)
+                        </small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">3. Ureum :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.ureum">
+                        <small class="form-text text-muted">
+                            (L : 15 – 45 mg/dl)<br>
+                            (P : 15 – 45 mg/dl)
+                        </small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">4. Asam Urat :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.asam_urat">
+                        <small class="form-text text-muted">
+                            (L : 3,4 – 7,0 mg/dl)<br>
+                            (P : 2,5 – 6,0 mg/dl)
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Kolom 2 (5-9) -->
+                <div class="col-md-3 border-right">
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">5. KGDs :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.kgds">
+                        <small class="form-text text-muted">(80 – 110 g/dl)</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">6. Cholesterol :</label>
+                        <input type="text" class="form-control form-control-sm"
+                            v-model="data_gizi.biokimia.cholesterol">
+                        <small class="form-text text-muted">(&lt; 220 mg/dl)</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">7. Trigliserida :</label>
+                        <input type="text" class="form-control form-control-sm"
+                            v-model="data_gizi.biokimia.trigliserida">
+                        <small class="form-text text-muted">
+                            (L : 60 – 165 mg/dl)<br>
+                            (P : 40 – 140 mg/dl)
+                        </small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">8. HDL :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.hdl">
+                        <small class="form-text text-muted">(&gt; 45 mg/dl)</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">9. LDL :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.ldl">
+                        <small class="form-text text-muted">(60 – 130 mg/dl)</small>
+                    </div>
+                </div>
+
+                <!-- Kolom 3 (10-13) -->
+                <div class="col-md-3 border-right">
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">10. HBsAg :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.hbsag">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">11. SGPT :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.sgpt">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">12. SGOT :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.sgot">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">13. Albumin :</label>
+                        <input type="text" class="form-control form-control-sm" v-model="data_gizi.biokimia.albumin">
+                        <small class="form-text text-muted">(3,8 – 4,4 mg/dl)</small>
+                    </div>
+                </div>
+
+                <!-- Kolom 4 (14) -->
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label class="mb-0 font-weight-bold">14. Lain-lain :</label>
+                        <textarea class="form-control form-control-sm" v-model="data_gizi.biokimia.lain_lain" rows="8"
+                            placeholder="Keterangan tambahan..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Fisik / Klinis -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header gizi-card-header">Fisik / Klinis</div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Vital Sign -->
+                <div class="col-md-4 mb-3 border-right">
+                    <div class="d-flex align-items-center mb-2" style="min-height: 31px;">
+                        <h6 class="mb-0"><b>Vital Sign</b></h6>
+                        <button
+                            v-if="external_link?.vital_sign_data_list && external_link.vital_sign_data_list.length > 0 
+                              && (external_link.vital_sign_data_list.length > 1 || external_link.vital_sign_data_list[0].layanan?.length > 1)"
+                            type="button" title="Vital sign" data-toggle="modal" data-target="#patient_vital_sign_modal"
+                            class="btn btn-info btn-sm ml-2">
+                            Hasil Vital Sign
+                        </button>
+                    </div>
+                    <div class="d-flex mb-2"><span style="width:50px;">TD</span><input type="text"
+                            class="form-control form-control-sm w-50" v-model="data_gizi.fisik_klinis.td" /> <span
+                            class="ml-2">mmHg</span></div>
+                    <div class="d-flex mb-2"><span style="width:50px;">N</span><input type="text"
+                            class="form-control form-control-sm w-50" v-model="data_gizi.fisik_klinis.n" /> <span
+                            class="ml-2">x/i</span></div>
+                    <div class="d-flex mb-2"><span style="width:50px;">T</span><input type="text"
+                            class="form-control form-control-sm w-50" v-model="data_gizi.fisik_klinis.t" /> <span
+                            class="ml-2">°C</span></div>
+                    <div class="d-flex mb-2"><span style="width:50px;">RR</span><input type="text"
+                            class="form-control form-control-sm w-50" v-model="data_gizi.fisik_klinis.rr" /> <span
+                            class="ml-2">x/i</span></div>
+                </div>
+                <!-- Gangguan -->
+                <div class="col-md-5 mb-3 border-right">
+                    <div class="d-flex align-items-center mb-2" style="min-height: 31px;">
+                        <h6 class="mb-0"><b>Gangguan</b></h6>
+                    </div>
+                    <div class="mb-1">
+                        <label>
+                            <input type="checkbox" value="Tidak ada" v-model="data_gizi.fisik_klinis.gangguan"
+                                @change="onGangguanTidakAda"> Tidak ada
+                        </label>
+                    </div>
+                    <div class="mb-1">
+                        <label>
+                            <input type="checkbox" value="Ada" v-model="data_gizi.fisik_klinis.gangguan"
+                                @change="onGangguanAda"> Ada :
+                        </label>
+                    </div>
+                    <div class="row pl-3">
+                        <div class="col-6">
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Diare" v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Diare
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Muntah" v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Muntah
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Mual" v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Mual
+                                </label>
+                            </div>
+                            <div class="mt-2">
+                                <label class="w-100">Lain-lain :
+                                    <input type="text" class="form-control form-control-sm mt-1"
+                                        v-model="data_gizi.fisik_klinis.lain_lain_gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Gangguan Menelan"
+                                        v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Gangguan Menelan
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Konstipasi" v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Konstipasi
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" value="Gangguan Mengunyah"
+                                        v-model="data_gizi.fisik_klinis.gangguan"
+                                        :disabled="!data_gizi.fisik_klinis.gangguan.includes('Ada')"> Gangguan Mengunyah
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cara Pemberian -->
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center mb-2" style="min-height: 31px;">
+                        <h6 class="mb-0"><b>Cara Pemberian Makanan</b></h6>
+                    </div>
+                    <div>
+                        <label><input type="checkbox" value="Oral" v-model="data_gizi.fisik_klinis.cara_pemberian">
+                            Oral</label>
+                    </div>
+                    <div>
+                        <label><input type="checkbox" value="NGT" v-model="data_gizi.fisik_klinis.cara_pemberian">
+                            NGT</label>
+                    </div>
+                    <div>
+                        <label><input type="checkbox" value="OGT" v-model="data_gizi.fisik_klinis.cara_pemberian">
+                            OGT</label>
+                    </div>
+                    <div class="mt-2">
+                        <label>Lain-lain: <input type="text" class="form-control form-control-sm d-inline w-75"
+                                v-model="data_gizi.fisik_klinis.lain_lain_pemberian"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- 4. Dietary -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header gizi-card-header">Dietary</div>
+            <div class="card-body">
+                <h6 class="font-weight-bold">Alergi Makanan:</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="30%">Telur</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.telur === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.telur = $event.target.checked ? 'Ya' : ''"> Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.telur === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.telur = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ikan</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.ikan === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.ikan = $event.target.checked ? 'Ya' : ''"> Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.ikan === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.ikan = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Udang</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.udang === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.udang = $event.target.checked ? 'Ya' : ''"> Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.udang === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.udang = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ayam</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.ayam === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.ayam = $event.target.checked ? 'Ya' : ''"> Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.ayam === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.ayam = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="50%">Gluten/gandum</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.gluten === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.gluten = $event.target.checked ? 'Ya' : ''">
+                                    Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.gluten === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.gluten = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Kacang kedelai/tanah</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.kacang === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.kacang = $event.target.checked ? 'Ya' : ''">
+                                    Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.kacang === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.kacang = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Susu sapi & olahan</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.susu === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.susu = $event.target.checked ? 'Ya' : ''"> Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.susu === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.susu = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Hazelnut/almond</td>
+                                <td>
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.hazelnut === 'Ya'"
+                                        @change="data_gizi.dietary.alergi.hazelnut = $event.target.checked ? 'Ya' : ''">
+                                    Ya
+                                    <input type="checkbox" :checked="data_gizi.dietary.alergi.hazelnut === 'Tidak'"
+                                        @change="data_gizi.dietary.alergi.hazelnut = $event.target.checked ? 'Tidak' : ''"
+                                        class="ml-2"> Tidak
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="font-weight-bold">Pola Makan:</h6>
+                    <textarea class="form-control" v-model="data_gizi.dietary.pola_makan" rows="2"></textarea>
+                </div>
+
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="font-weight-bold mb-0">Riwayat Asupan Makanan:</h6>
+                        <button type="button" class="btn btn-success btn-sm" @click="addAsupan"><i class="fa fa-plus"></i>
+                            Tambah Zat Gizi</button>
+                    </div>
+                    <table class="table table-sm table-bordered">
+                        <thead class="bg-light text-center">
+                            <tr>
+                                <th>Zat Gizi</th>
+                                <th>Kebutuhan</th>
+                                <th>Kecukupan</th>
+                                <th>% Kecukupan</th>
+                                <th width="8%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in data_gizi.dietary.asupan" :key="index">
+                                <td><input type="text" class="form-control form-control-sm font-weight-bold"
+                                        v-model="item.zat_gizi" placeholder="Nama Zat Gizi"></td>
+                                <td><input type="text" class="form-control form-control-sm"
+                                        v-model="item.kebutuhan"></td>
+                                <td><input type="text" class="form-control form-control-sm"
+                                        v-model="item.kecukupan"></td>
+                                <td><input type="text" class="form-control form-control-sm"
+                                        v-model="item.persen"></td>
+                                <td class="text-center"><button type="button" class="btn btn-danger btn-sm"
+                                        @click="removeAsupan(index)" v-if="data_gizi.dietary.asupan.length > 1"><i
+                                            class="fa fa-trash"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIWAYAT PERSONAL & RIWAYAT PENYAKIT DAHULU (Poin 4: Sejajar & simetris) -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header gizi-card-header">Riwayat Personal</div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Kolom Kiri: Input Riwayat Personal -->
+                    <div class="col-md-6 border-right">
+                        <label class="font-weight-bold">Riwayat Personal :</label>
+                        <textarea class="form-control" v-model="data_gizi.riwayat_personal.personal" rows="3"
+                            placeholder="Isi riwayat personal..."></textarea>
+                    </div>
+
+                    <!-- Kolom Kanan: Riwayat Penyakit Dahulu -->
+                    <div class="col-md-6 pl-md-3 mt-3 mt-md-0">
+                        <label class="font-weight-bold">Riwayat Penyakit Dahulu :</label>
+                        <textarea class="form-control" v-model="data_gizi.riwayat_personal.penyakit_dahulu" rows="3"
+                            placeholder="Isi riwayat penyakit dahulu..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNOSA GIZI (Poin 1 & 2: Hapus autocomplete/tambah data, samakan posisi tombol dengan Diagnosa Medis) -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header gizi-card-header">Diagnosa Gizi</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-2">
+                        <button
+                            v-if="Array.isArray(external_link?.diet_data) && external_link.diet_data.length > 0 && Array.isArray(external_link.diet_data[0].diagnosa_gizi) && external_link.diet_data[0].diagnosa_gizi.length > 1"
+                            type="button" title="Riwayat diagnosa" data-toggle="modal"
+                            data-target="#hasilDiagUtamaGiziModal" class="btn btn-info btn-sm mb-2"
+                            @click="backupDiagUtamaData">
+                            Pilih Diagnosis Gizi
+                        </button>
+                        <textarea type="text" style="white-space: pre-wrap" class="form-control"
+                            v-model="diagnosa_gizi_freetext" id="diagnosis_gizi_text"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTERVENSI GIZI -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header gizi-card-header">Intervensi Gizi</div>
+            <div class="card-body">
+                <textarea class="form-control" v-model="data_gizi.intervensi_gizi" rows="4"></textarea>
+            </div>
+        </div>
+
+        <!-- MONITORING DAN EVALUASI -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header gizi-card-header d-flex justify-content-between align-items-center">
+                <span>Monitoring dan Evaluasi</span>
+                <button type="button" class="btn btn-success btn-sm" @click="addMonitoring"><i class="fa fa-plus"></i>
+                    Tambah Baris Monitoring</button>
+            </div>
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="bg-light text-center">
+                        <tr>
+                            <th width="12%">Tgl</th>
+                            <th width="15%">Antropometri</th>
+                            <th width="15%">Biokimia</th>
+                            <th width="15%">Fisik/Klinis</th>
+                            <th width="15%">Dietary</th>
+                            <th width="20%">Evaluasi</th>
+                            <th width="8%">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in data_gizi.monitoring_evaluasi" :key="index">
+                            <td><input type="date" class="form-control form-control-sm" v-model="item.tgl"></td>
+                            <td><textarea class="form-control form-control-sm" v-model="item.antropometri"
+                                    rows="2"></textarea></td>
+                            <td><textarea class="form-control form-control-sm" v-model="item.biokimia"
+                                    rows="2"></textarea></td>
+                            <td><textarea class="form-control form-control-sm" v-model="item.fisik" rows="2"></textarea>
+                            </td>
+                            <td><textarea class="form-control form-control-sm" v-model="item.dietary"
+                                    rows="2"></textarea></td>
+                            <td><textarea class="form-control form-control-sm" v-model="item.evaluasi"
+                                    rows="2"></textarea></td>
+                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm"
+                                    @click="removeMonitoring(index)"><i class="fa fa-trash"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr style="height: 2px; border-width: 0; color: gray; background-color: gray; margin-block: 1.5rem" />
+
+        <div class="row mt-5 justify-content-end">
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="input-group col-md-12 mt-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Tanggal</span>
+                        </div>
+                        <input id="drawer_ttd_tanggal" type="date" class="form-control" v-model="ttd_data.tanggal" />
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Jam</span>
+                        </div>
+                        <input id="drawer_ttd_jam" type="time" class="form-control" v-model="ttd_data.jam" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-5 justify-content-end">
+            <div class="col-md-6">
+                <ttd-section mode="IMAGE" label="Perawat" select_id="nakes_auto1" name_input_type="DOKTER"
+                    v-model="ttd_data.perawat" path_name="ttd_data.perawat" :stroke="ttd_data.perawat_stroke"
+                    path_stroke="ttd_data.perawat_stroke" @update-stroke="ttd_data.perawat_stroke = $event"
+                    @open-ttd-modal="openTTDModalHandler" />
+            </div>
+        </div>
+
+        <div class="form-group row mt-5 text-center">
+            <div class="col-md-12">
+                <button type="button" v-on:click="saveDoc" class="btn btn-primary">
+                    <i class="fa fa-save"></i>
+                    Simpan
+                </button>
+                <button type="button" v-on:click="checkData" class="btn btn-success prod_hidden">
+                    <i class="fa fa-check-square-o"></i>
+                    Check Data
+                </button>
+            </div>
+        </div>
+
+        <!-- START MODAL TTD -->
+        <div class="modal fade" id="tandaTanganModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
+            aria-labelledby="tandaTanganModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tandaTanganModalLabel">{{ tmp_modal_ttd.title }}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="row text-center d-block mb-2">{{ tmp_modal_ttd.label }}</div>
+                                <div class="row">
+                                    <div class="col-md-12 p-0 d-flex justify-content-center">
+                                        <div style="width: 65%" class="d-flex justify-content-between">
+                                            <div>
+                                                <div style="display: inline; margin-right: 10px">
+                                                    <input type="color" style="width: 30px"
+                                                        v-model="drawings.ttd_1.brushColor" />
+                                                </div>
+                                                <div style="display: inline; margin-right: 10px; margin-top: 5px">
+                                                    <input type="range" min="1" max="20"
+                                                        v-model="drawings.ttd_1.brushSize" />
+                                                    <span>{{ drawings.ttd_1.brushSize }}</span>
+                                                </div>
+                                            </div>
+                                            <div style="display: inline">
+                                                <button type="button" @click="startDrawing('ttd_1')"
+                                                    class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip"
+                                                    data-bs-placement="left" title="Drawing">
+                                                    <i class="fa fa-paint-brush"></i>
+                                                </button>
+                                                <button type="button" title="Erasing" @click="startErasing('ttd_1')"
+                                                    class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip"
+                                                    data-bs-placement="left">
+                                                    <i class="fa fa-eraser"></i>
+                                                </button>
+                                                <button type="button" title="Clear All" @click="clearCanvas('ttd_1')"
+                                                    class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip"
+                                                    data-bs-placement="left">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 d-flex justify-content-center">
+                                        <canvas ref="ttd_1" id="ttd_1" width="180" height="100"
+                                            style="border: 1px solid black; margin-right: 3px"></canvas>
+                                    </div>
+                                </div>
+                                <div class="row mt-2 justify-content-center">
+                                    <div class="col-md-12 p-0 d-flex justify-content-center">
+                                        <div v-if="tmp_modal_ttd.name_input_type === 'TEXT'" style="width: 65%"
+                                            class="d-flex justify-content-center">
+                                            <input :key="'input_text'" type="text" class="form-control"
+                                                v-model="tmp_modal_ttd.name" />
+                                        </div>
+                                        <div v-if="tmp_modal_ttd.name_input_type === 'DOKTER'" style="width: 65%">
+                                            <select :key="'input_dokter'" class="form-control"
+                                                id="dokter_ttd_modal_auto" style="width: 100%"></select>
+                                        </div>
+                                        <div v-if="tmp_modal_ttd.name_input_type === 'NAKES'" style="width: 65%">
+                                            <select :key="'input_nakes'" class="form-control" id="nakes_ttd_modal_auto"
+                                                style="width: 100%"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal"
+                            @click="saveTTDHandler(true)">
+                            Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END MODAL TTD -->
+
+        <!--START DIAGNOSA MODAL-->
+        <div class="modal fade" id="hasilDiagUtamaModal" tabindex="-1" role="dialog"
+            aria-labelledby="hasilDiagUtamaModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hasil Diagnosa Utama</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <!--Looping Jenis kunjungan-->
+                            <div class="mb-3" v-for="(jenisLayanan, i) in external_link.diagnosa_list" :key="i">
+                                <h6><u>{{jenisLayanan.jenis}} {{jenisLayanan.tanggal}} {{jenisLayanan.jam}}</u></h6>
+                                <!--Looping nama layanan Lab-->
+                                <div v-for="(DiagUtamaItem, j) in jenisLayanan.layanan" :key="j" class="mb-1 mx-2">
+                                    <div class="col-12 row justify-content-between px-3 rounded border-bottom font-weight-bold"
+                                        :class="{'bg-primary':index_expand_diagnosa[i][j].expand, 'bg-light': !index_expand_diagnosa[i][j].expand }">
+                                        <a class="nav-link col"
+                                            :class="{'text-white':index_expand_diagnosa[i][j].expand}"
+                                            href="javascript:;" data-toggle="collapse" role="button"
+                                            :aria-expanded="index_expand_diagnosa[i][j].expand"
+                                            @click.prevent="navCollapse(i, j, 'index_expand_diagnosa')">
+                                            <!--<i class="ni ni-single-copy-04 text-primary"></i>-->
+                                            <span class="nav-link-text">{{DiagUtamaItem.icd_x}} -
+                                                {{DiagUtamaItem.nama_sebab_sakit}} - {{DiagUtamaItem.deskripsi}}</span>
+                                        </a>
+                                        <div class="nav-link">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    :id="'customCheckDiagUtama'+i+j"
+                                                    @change="checkAllBridgingList('index_expand_diagnosa', true)"
+                                                    v-model="index_expand_diagnosa[i][j].selected" />
+                                                <label class="custom-control-label"
+                                                    :for="'customCheckDiagUtama'+i+j"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-if="DiagUtamaItem.icd_x" class="col-12 border rounded row collapse"
+                                        :class="{ show : index_expand_diagnosa[i][j].expand }">
+                                        <p class="nav-link mb-0">
+                                            Hasil:
+                                            <span v-html="DiagUtamaItem.icd_x"></span>
+                                            <br />
+                                            {{DiagUtamaItem.icd_x}} - {{DiagUtamaItem.nama_sebab_sakit}} -
+                                            {{DiagUtamaItem.deskripsi}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group mb-0"
+                            style="display: flex; flex-wrap: nowrap; align-items: stretch; width: fit-content; height: 38px">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input id="checkAllButtonDiagnosis" type="checkbox"
+                                        @change="checkAllBridgingList('index_expand_diagnosa')"
+                                        v-model="index_expand_diagnosa_check_all" />
+                                </div>
+                            </div>
+                            <label for="checkAllButtonDiagnosis" class="form-check-label font-weight-bold rounded-right"
+                                style="padding: 0.375rem 0.75rem; border: 1px solid #ced4da; display: flex; align-items: center; font-size: 16px">
+                                Pilih semua
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-primary mb-0" @click="saveDiagUtama">Simpan</button>
+                        <button type="button" class="btn btn-secondary mb-0" data-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--END DIAGNOSA MODAL-->
+
+        <!-- VITAL SIGN MODAL -->
+        <div style="overflow-y: scroll;" class="modal fade" id="patient_vital_sign_modal" tabindex="-1" role="dialog"
+            aria-labelledby="patient_vital_sign_modalModalTitle" aria-hidden="true">
+            <div class="modal-dialog" style="max-width: 1080px;" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Vital Sign</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tab-content border" style="border-color: #eeeeee; padding: 5px 5px 0px 5px">
+                            <div class="accordion" id="accordionExample">
+                                <div v-for="(vital_data,i) in external_link.vital_sign_data_list">
+                                    <div class="card" v-for="(layanan_data,j) in vital_data.layanan"
+                                        :key="vital_data.id_layanan_pendaftaran+'_'+j" style="position: relative">
+                                        <div style="cursor: pointer" class="card-header"
+                                            :id="'heading'+'_'+vital_data.id_layanan_pendaftaran+'_'+j"
+                                            data-toggle="collapse"
+                                            :data-target="'#collapse'+'_'+vital_data.id_layanan_pendaftaran+'_'+j"
+                                            aria-expanded="false"
+                                            :aria-controls="'collapseOne'+'_'+vital_data.id_layanan_pendaftaran+'_'+j">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h2 class="p-0 m-0">{{layanan_data.jenis_layanan}}</h2>
+                                                    <span class="text-muted">{{layanan_data.waktu_visitasi ?
+                                                        layanan_data.waktu_visitasi : "-"}}</span>
+                                                </div>
+                                                <div>
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                        @click.stop="setVitalSign(vital_data, layanan_data, 'collapse_'+vital_data.id_layanan_pendaftaran+'_'+j)">
+                                                        Pilih
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div :id="'collapse'+'_'+vital_data.id_layanan_pendaftaran+'_'+j"
+                                            class="collapse"
+                                            :aria-labelledby="'heading'+'_'+vital_data.id_layanan_pendaftaran+'_'+j"
+                                            data-parent="#accordionExample">
+                                            <div class="card-body px-2">
+                                                <section class="d-flex">
+                                                    <div style="width: 50%" class="">
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Jenis kunjungan</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.jenis_igd}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Dokter</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.dokter}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Keluhan Utama (Dokter)</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.keluhan_utama}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Keluhan Utama (Perawat)</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.keluhan_utama_perawat}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Anamnesis</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.anamnesis}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Anamnesis Lalu</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.anamnesis_lalu}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Penyakit Keluarga</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.riwayat_penyakit_keluarga}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Plan</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.plan}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Alergi</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.alergi}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 35%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Pemeriksaan Fisik</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 65%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.pemeriksaan_fisik}}</span>
+                                                            </div>
+                                                        </section>
+                                                    </div>
+                                                    <div style="width: 50%" class="">
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Tensi</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.tensi.sistole}}</span>
+                                                                <span>&nbsp;mm/Hg &nbsp;</span>
+                                                                <span>&nbsp;/ &nbsp;</span>
+                                                                <span>{{layanan_data.tensi.diastole}}</span>
+                                                                <span>&nbsp;mm/Hg &nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Nadi</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.nadi}}</span>
+                                                                <span>&nbsp;x/menit &nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Suhu</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.suhu}}</span>
+                                                                <span>&nbsp;&deg;C &nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Napas</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.nafas}}</span>
+                                                                <span>&nbsp;x/menit &nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Berat Badan</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.berat_badan}}</span>
+                                                                <span>&nbsp;Kg&nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Tinggi Badan</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.tinggi_badan}}</span>
+                                                                <span>&nbsp;Cm&nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">spo2</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.spo2}}</span>
+                                                                <span>&nbsp;%&nbsp;</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Kesadaran</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.assesmen_igd.disability_kesadaran}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Keadaan Umun</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{vital_data.assesmen_igd.disability_keadaan_umum}}</span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">GCS E</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span v-if="vital_data.jenis_layanan === 'IGD'">
+                                                                    {{ vital_data.assesmen_igd.gcs_e }}
+                                                                </span>
+                                                                <span v-else>
+                                                                    {{ layanan_data?.gcs?.e }}
+                                                                </span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">GCS V</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span v-if="vital_data.jenis_layanan === 'IGD'">
+                                                                    {{ vital_data.assesmen_igd.gcs_v }}
+                                                                </span>
+                                                                <span v-else>
+                                                                    {{ layanan_data?.gcs?.v }}
+                                                                </span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">GCS M</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span v-if="vital_data.jenis_layanan === 'IGD'">
+                                                                    {{ vital_data.assesmen_igd.gcs_m }}
+                                                                </span>
+                                                                <span v-else>
+                                                                    {{ layanan_data?.gcs?.m }}
+                                                                </span>
+                                                            </div>
+                                                        </section>
+                                                        <section class="d-flex align-items-start border-bottom">
+                                                            <div style="width: 30%"
+                                                                class="d-flex justify-content-between">
+                                                                <p class="d-block mb-0">Pemeriksaan Penunjang</p>
+                                                                <p class="d-block mb-0">:</p>
+                                                            </div>
+                                                            <div style="width: 70%"
+                                                                class="d-flex text-left align-items-center pl-1">
+                                                                <span>{{layanan_data.pemeriksaan_penunjang}}</span>
+                                                            </div>
+                                                        </section>
+                                                    </div>
+                                                </section>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- VITAL SIGN MODAL -->
+
+        <!--START DIAGNOSA GIZI MODAL-->
+        <div class="modal fade" id="hasilDiagUtamaGiziModal" tabindex="-1" role="dialog"
+            aria-labelledby="hasilDiagUtamaGiziModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hasil Diagnosa Gizi</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <!--Looping based on diet_data-->
+                            <div class="mb-3" v-for="(visitData, i) in external_link.diet_data" :key="i">
+                                <!-- <h6><u>No Register: {{visitData.no_register}}</u></h6> -->
+                                <!--Looping diagnosa_gizi-->
+                                <div v-for="(dietItem, j) in visitData.diagnosa_gizi" :key="j" class="mb-1 mx-2 pl-4">
+                                    <div class="col-12 row justify-content-between px-3 rounded border-bottom font-weight-bold"
+                                        :class="{'bg-primary':index_expand_diagnosa_gizi[i][j].expand, 'bg-light': !index_expand_diagnosa_gizi[i][j].expand }">
+                                        <a class="nav-link col"
+                                            :class="{'text-white':index_expand_diagnosa_gizi[i][j].expand}"
+                                            href="javascript:;" data-toggle="collapse" role="button"
+                                            :aria-expanded="index_expand_diagnosa_gizi[i][j].expand"
+                                            @click.prevent="navCollapse(i, j, 'index_expand_diagnosa_gizi')">
+                                            <!--Display kode_nama only-->
+                                            <span class="nav-link-text">{{dietItem.kode_nama}}</span>
+                                        </a>
+                                        <div class="nav-link">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    :id="'customCheckDiagUtama-' + i + '-' + j"
+                                                    @change="checkAllBridgingList('index_expand_diagnosa_gizi', true, null, 'diet_data', 'diagnosa_gizi')"
+                                                    v-model="index_expand_diagnosa_gizi[i][j].selected" />
+                                                <label class="custom-control-label"
+                                                    :for="'customCheckDiagUtama-' + i + '-' + j"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 border rounded row collapse"
+                                        :class="{ show : index_expand_diagnosa_gizi[i][j].expand }">
+                                        <p class="nav-link mb-0">
+                                            <!--Display deskripsi_diet_diagnosa_gizi on expand-->
+                                            {{dietItem.deskripsi_diet_diagnosa_gizi}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group mb-0"
+                            style="display: flex; flex-wrap: nowrap; align-items: stretch; width: fit-content; height: 38px">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input id="checkAllButtonDiagnosisGizi" type="checkbox"
+                                        @change="checkAllBridgingList('index_expand_diagnosa_gizi', false, null, 'diet_data', 'diagnosa_gizi')"
+                                        v-model="index_expand_diagnosa_gizi_check_all" />
+                                </div>
+                            </div>
+                            <label for="checkAllButtonDiagnosisGizi"
+                                class="form-check-label font-weight-bold rounded-right"
+                                style="padding: 0.375rem 0.75rem; border: 1px solid #ced4da; display: flex; align-items: center; font-size: 16px">
+                                Pilih semua
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-primary mb-0" @click="saveDiagUtamaGizi">Simpan</button>
+                        <button type="button" class="btn btn-secondary mb-0" data-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--END DIAGNOSA GIZI MODAL-->
+</form>
